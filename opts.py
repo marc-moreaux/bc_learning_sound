@@ -7,7 +7,7 @@ def parse():
 
     # General settings
     parser.add_argument('--dataset', required=True, choices=['esc10', 'esc50', 'urbansound8k'])
-    parser.add_argument('--netType', required=True, choices=['envnet', 'envnetv2'])
+    parser.add_argument('--netType', required=True, choices=['envnet', 'envnetv2', 'stridenet'])
     parser.add_argument('--data', required=True, help='Path to dataset')
     parser.add_argument('--split', type=int, default=-1, help='esc: 1-5, urbansound: 1-10 (-1: run on all splits)')
     parser.add_argument('--save', default='None', help='Directory to save the results')
@@ -52,7 +52,7 @@ def parse():
     if opt.netType == 'envnet':
         opt.fs = 16000
         opt.inputLength = 24014
-    else:  # envnetv2
+    else:  # envnetv2 and stridenet
         opt.fs = 44100
         opt.inputLength = 66650
 
@@ -60,15 +60,18 @@ def parse():
     default_settings = dict()
     default_settings['esc50'] = {
         'envnet': {'nEpochs': 600, 'LR': 0.01, 'schedule': [0.5, 0.75], 'warmup': 0},
-        'envnetv2': {'nEpochs': 1000, 'LR': 0.1, 'schedule': [0.3, 0.6, 0.9], 'warmup': 10}
+        'envnetv2': {'nEpochs': 1000, 'LR': 0.1, 'schedule': [0.3, 0.6, 0.9], 'warmup': 10},
+        'stridenet': {'nEpochs': 1000, 'LR': 0.1, 'schedule': [0.3, 0.6, 0.9], 'warmup': 10},
     }
     default_settings['esc10'] = {
         'envnet': {'nEpochs': 600, 'LR': 0.01, 'schedule': [0.5, 0.75], 'warmup': 0},
-        'envnetv2': {'nEpochs': 600, 'LR': 0.01, 'schedule': [0.5, 0.75], 'warmup': 0}
+        'envnetv2': {'nEpochs': 600, 'LR': 0.01, 'schedule': [0.5, 0.75], 'warmup': 0},
+        'stridenet': {'nEpochs': 600, 'LR': 0.01, 'schedule': [0.5, 0.75], 'warmup': 0},
     }
     default_settings['urbansound8k'] = {
         'envnet': {'nEpochs': 400, 'LR': 0.01, 'schedule': [0.5, 0.75], 'warmup': 0},
-        'envnetv2': {'nEpochs': 600, 'LR': 0.1, 'schedule': [0.3, 0.6, 0.9], 'warmup': 10}
+        'envnetv2': {'nEpochs': 600, 'LR': 0.1, 'schedule': [0.3, 0.6, 0.9], 'warmup': 10},
+        'stridenet': {'nEpochs': 600, 'LR': 0.1, 'schedule': [0.3, 0.6, 0.9], 'warmup': 10},
     }
     for key in ['nEpochs', 'LR', 'schedule', 'warmup']:
         if eval('opt.{}'.format(key)) == -1:
