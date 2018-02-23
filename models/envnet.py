@@ -12,17 +12,20 @@ from convbnrelu import ConvBNReLU
 
 
 class EnvNet(chainer.Chain):
-    def __init__(self, n_classes):
+    def __init__(self, n_classes, **kwargs):
         super(EnvNet, self).__init__(
             conv1=ConvBNReLU(1, 40, (1, 8)),
             conv2=ConvBNReLU(40, 40, (1, 8)),
             conv3=ConvBNReLU(1, 50, (8, 13)),
             conv4=ConvBNReLU(50, 50, (1, 5)),
+            convGAP=ConvBNReLU(50, n_classes, (1, 1)),
             fc5=L.Linear(50 * 11 * 14, 4096),
             fc6=L.Linear(4096, 4096),
             fc7=L.Linear(4096, n_classes)
         )
         self.train = True
+        if 'GAP' in kwargs.keys():
+            self.use_GAP = kwargs['GAP']
 
     def __call__(self, x):
         h = self.conv1(x, self.train)
@@ -34,6 +37,13 @@ class EnvNet(chainer.Chain):
         h = F.max_pooling_2d(h, 3)
         h = self.conv4(h, self.train)
         h = F.max_pooling_2d(h, (1, 3))
+
+        if self.use_GAP:
+            h = self.convGAP(h, self.train)
+            self.maps = h
+            batch, channels, height, width = h.data.shape
+            h = F.reshape(F.average_pooling_2d(h, (height, width)), (batch, channels))
+            return h
 
         h = F.dropout(F.relu(self.fc5(h)), train=self.train)
         h = F.dropout(F.relu(self.fc6(h)), train=self.train)
