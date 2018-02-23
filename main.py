@@ -23,7 +23,7 @@ def main():
 
 
 def train(opt, split):
-    model = getattr(models, opt.netType)(opt.nClasses)
+    model = getattr(models, opt.netType)(opt.nClasses, GAP=opt.GAP)
     model.to_gpu()
     optimizer = chainer.optimizers.NesterovAG(lr=opt.LR, momentum=opt.momentum)
     optimizer.setup(model)

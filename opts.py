@@ -24,6 +24,8 @@ def parse():
     parser.add_argument('--batchSize', type=int, default=64)
     parser.add_argument('--weightDecay', type=float, default=5e-4)
     parser.add_argument('--momentum', type=float, default=0.9)
+    parser.add_argument('--GAP', action='store_true', help='Use GAP layer')
+    parser.add_argument('--l1reg', type=float, default=1e-7, help='Use a L1 regularizer on maps before GAP')
 
     # Testing settings
     parser.add_argument('--nCrops', type=int, default=10)
@@ -93,6 +95,7 @@ def display_info(opt):
     print('+------------------------------+')
     print('| dataset  : {}'.format(opt.dataset))
     print('| netType  : {}'.format(opt.netType))
+    print('| GAP      : {} {}'.format(opt.GAP, opt.l1reg))
     print('| learning : {}'.format(learning))
     print('| augment  : {}'.format(opt.strongAugment))
     print('| nEpochs  : {}'.format(opt.nEpochs))

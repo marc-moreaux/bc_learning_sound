@@ -35,6 +35,8 @@ class Trainer:
                 loss = F.softmax_cross_entropy(y, t)
                 acc = F.accuracy(y, t)
 
+            if self.opt.GAP is not False:
+                loss += self.opt.l1reg * F.sum(self.model.maps)
             loss.backward()
             self.optimizer.update()
             train_loss += float(loss.data) * len(t.data)
