@@ -35,7 +35,9 @@ class EnvNet(chainer.Chain):
         h = F.swapaxes(h, 1, 2)
 
         h = self.conv3(h, self.train)
-        h = F.max_pooling_2d(h, 3)
+        if not self.use_GAP:
+            h = F.max_pooling_2d(h, 3)
+
         h = self.conv4(h, self.train)
         if not self.use_GAP:
             h = F.max_pooling_2d(h, (1, 3))
@@ -52,3 +54,4 @@ class EnvNet(chainer.Chain):
         h = F.dropout(F.relu(self.fc6(h)), train=self.train)
 
         return self.fc7(h)
+        
