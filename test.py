@@ -16,6 +16,7 @@ import numpy as np
 import os
 import argparse
 import cPickle as pickle
+import ast
 
 
 def parse():
@@ -89,8 +90,29 @@ def main():
 
                 axs[0].plot(sound[i, 0, 0])
                 axs[1].plot(viz.T)
-                fig.savefig(os.path.join(opt.save, 'split{}_viz{}.png'.format(split, i)))
+                save_path = os.path.join(opt.save, 'split{}_viz{}.png'.format(split, i))
+                fig.savefig(save_path, dpi=300)
                 fig.clf()
+        
+        # visualize learning
+        log_path = os.path.join(opt.save, 'logger{}.txt'.format(split))
+        with open(log_path, "r") as f:
+            logs = {}
+            for line in f:
+                k, v = line.split(': ')
+                v = ast.literal_eval(v)
+                logs[k] = v
+        
+        fig, axs = plt.subplots(2, 1, figsize=(15, 12))
+        axs[0].plot(logs['train_acc'][10:])
+        axs[0].plot(logs['val_acc'][10:])
+        axs[0].set_ylim([4, 30])
+        end_mean = np.array(logs['val_acc'][-20:]).mean()
+        axs[0].set_title(str(end_mean))
+        axs[1].plot(logs['train_loss'][10:])
+        save_path = os.path.join(opt.save, 'learning_split{}.png'.format(split))
+        fig.savefig(save_path, dpi=100)
+        fig.clf()
 
 
 if __name__ == '__main__':
