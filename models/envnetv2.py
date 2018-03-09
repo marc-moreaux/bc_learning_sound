@@ -50,7 +50,6 @@ class EnvNetv2(chainer.Chain):
         h = F.max_pooling_2d(h, (1, 2))
         h = self.conv9(h, self.train)
         h = self.conv10(h, self.train)
-        h = F.max_pooling_2d(h, (1, 2))
 
         if self.use_GAP:
             h = self.conv11(h, self.train)
@@ -59,6 +58,7 @@ class EnvNetv2(chainer.Chain):
             h = F.reshape(F.average_pooling_2d(h, (height, width)), (batch, channels))
             return h
 
+        h = F.max_pooling_2d(h, (1, 2))
         h = F.dropout(F.relu(self.fc11(h)), train=self.train)
         h = F.dropout(F.relu(self.fc12(h)), train=self.train)
 
