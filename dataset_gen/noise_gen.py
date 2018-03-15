@@ -7,7 +7,6 @@
 
 import sys
 import os
-import subprocess
 
 from esc_gen import convert_fs
 import numpy as np
@@ -17,7 +16,7 @@ import wavio
 def create_dataset(dir_path, dest_dir, fs):
     print('* Creating the .npz in {}'.format(dir_path))
     wav_dataset = {'train': [], 'valid': []}
-
+ 
     for wav_file in sorted(os.listdir(dir_path)):
         wav_file = os.path.join(dir_path, wav_file)
         sound = wavio.read(wav_file).data.T[0]
@@ -34,14 +33,19 @@ def create_dataset(dir_path, dest_dir, fs):
     np.savez(npz_file_path, **wav_dataset)
 
 
-noise_dir = os.path.join(sys.argv[1], 'noise')
-wav_dir_orig = os.path.join(noise_dir, 'to_export')
-fs_list = [16000, 44100]
+def main():
+    noise_dir = os.path.join(sys.argv[1], 'noise')
+    wav_dir_orig = os.path.join(noise_dir, 'to_export')
+    fs_list = [16000, 44100]
 
-for fs in fs_list:
-    wav_dir_fs = os.path.join(noise_dir, 'wav{}'.format(fs // 1000))
-    convert_fs(wav_dir_orig, wav_dir_fs, fs)
+    for fs in fs_list:
+        wav_dir_fs = os.path.join(noise_dir, 'wav{}'.format(fs // 1000))
+        convert_fs(wav_dir_orig, wav_dir_fs, fs)
 
-for fs in fs_list:
-    wav_dir_fs = os.path.join(noise_dir, 'wav{}'.format(fs // 1000))
-    create_dataset(wav_dir_fs, noise_dir, fs)
+    for fs in fs_list:
+        wav_dir_fs = os.path.join(noise_dir, 'wav{}'.format(fs // 1000))
+        create_dataset(wav_dir_fs, noise_dir, fs)
+
+
+if __name__ == '__main__':
+    main()
