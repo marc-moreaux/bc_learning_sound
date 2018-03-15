@@ -17,6 +17,7 @@ def parse():
     # Learning settings (default settings are defined below)
     parser.add_argument('--BC', action='store_true', help='BC learning')
     parser.add_argument('--strongAugment', action='store_true', help='Add scale and gain augmentation')
+    parser.add_argument('--noiseAugment', action='store_true', help='Add some noise when training')
     parser.add_argument('--nEpochs', type=int, default=-1)
     parser.add_argument('--LR', type=float, default=-1, help='Initial learning rate')
     parser.add_argument('--schedule', type=float, nargs='*', default=-1, help='When to divide the LR')

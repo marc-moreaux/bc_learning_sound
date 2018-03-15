@@ -22,13 +22,19 @@ class SoundDataset(chainer.dataset.DatasetMixin):
             funcs = []
             if self.opt.strongAugment:
                 funcs += [U.random_scale(1.25)]
-
+            
             funcs += [U.padding(self.opt.inputLength // 2),
                       U.random_crop(self.opt.inputLength),
                       U.normalize(32768.0),
                       ]
 
         else:
+            if self.opt.noiseAugment:
+                funcs += [U.add_noise(is_train, 0.15,
+                                      self.opt.data,
+                                      self.opt.fs,
+                                      self.opt.inputLength)]
+
             funcs = [U.padding(self.opt.inputLength // 2),
                      U.normalize(32768.0),
                      U.multi_crop(self.opt.inputLength, self.opt.nCrops),

@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import chainer.functions as F
+from os.path import join
 
 
 # Default data augmentation
@@ -51,6 +52,23 @@ def random_scale(max_scale, interpolate='Linear'):
 def random_gain(db):
     def f(sound):
         return sound * np.power(10, random.uniform(-db, db) / 20.0)
+
+    return f
+
+
+def add_noise(is_train, noise_ratio, data_path, fs, output_length):
+    npz_path = join(data_path, 'noise', 'wav{}.npz'.format(fs // 1000))
+    dataset = np.load(npz_path).items()
+    train, valid = dataset['train'], dataset['valid']
+
+    def _next_noise(is_train):
+        ds = train if is_train else valid
+        rand_idx = np.random.randint(0, len(ds) - output_length - 1)
+        return ds[rand_idx: rand_idx + output_length]
+
+    def f(sound):
+        sound = sound + noise_ration * _next_noise(is_train)
+        return sound
 
     return f
 
