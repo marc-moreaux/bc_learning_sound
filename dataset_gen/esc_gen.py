@@ -8,6 +8,7 @@
 import sys
 import os
 import subprocess
+import shutil
 
 import glob
 import numpy as np
@@ -51,6 +52,8 @@ def main():
 
 def convert_fs(src_path, dst_path, fs):
     print('* {} -> {}'.format(src_path, dst_path))
+    if os.path.isdir(dst_path):
+        shutil.rmtree(dst_path)
     os.mkdir(dst_path)
     for src_file in sorted(glob.glob(os.path.join(src_path, '*.wav'))):
         dst_file = src_file.replace(src_path, dst_path)
