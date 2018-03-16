@@ -31,6 +31,15 @@ def parse():
         type=int,
         default=-1,
         help='esc: 1-5, urbansound: 1-10 (-1: run on all splits)')
+    parser.add_argument(
+        '--noiseAugment',
+        action='store_true',
+        help='Add some noise when training')
+    parser.add_argument(
+        '--inputLength',
+        type=int,
+        default=0,
+        help='change prefered input size')
     args = parser.parse_args()
 
     # Reformat arguments if necessary
@@ -39,12 +48,42 @@ def parse():
     return args
 
 
+def get_class_names(opt):
+    '''Get a correspondance between class number and class_name
+    '''
+    import pandas as pd
+    df = pd.read_csv(os.path.join(opt.data, 'esc50/ESC-50-master/meta/esc50.csv'))
+    if opt.dataset == 'esc10' or opt.dataset == 'esc50':
+        class_names = dict(set(zip(df.target, df.category)))
+        if opt.dataset == 'esc10':
+            esc10_classes = [0, 10, 11, 20, 38, 21, 40, 41, 1, 12]
+            class_names = {i: class_names[c_idx] for i, c_idx in enumerate(esc10_classes)}
+    
+    return class_names
+
+
+def fix_opt(opt):
+    if not 'noiseAugment' in opt:
+        opt.noiseAugment = False
+    return opt
+
+
+def change_opt_wrt_args(opt, args):
+    '''Change opt according to args parameters
+    '''
+    opt.noiseAugment = args.noiseAugment
+    if args.inputLength > 0:
+        opt.inputLength = args.inputLength
+    return opt
+
+
 def load_model(save_path, split):
     '''Load a model stored at <save_path> on split <split>
     '''
     # Load opt
     with open(os.path.join(save_path, 'opt{}.pkl'.format(split)), 'rb') as f:
         opt = pickle.load(f)
+        opt = fix_opt(opt)
 
     # Load model
     model = getattr(models, opt.netType)(opt.nClasses, GAP=opt.GAP)
@@ -60,28 +99,34 @@ def load_first_val_batch(opt, split):
     '''
     train_iter, val_iter = dataset.setup(opt, split)
     batch = val_iter.next()
-    x_array, t_array = chainer.dataset.concat_examples(batch)
+    x_array, lbls = chainer.dataset.concat_examples(batch)
     if opt.nCrops > 1:
         x_array = x_array.reshape((x_array.shape[0] * opt.nCrops, x_array.shape[2]))
     x = chainer.Variable(cuda.to_gpu(x_array[:, None, None, :]))
-    t = chainer.Variable(cuda.to_gpu(t_array))
 
-    return x, t
+    return x, lbls
 
 
-def plot_CAM_visualization(sound, viz, title):
+def plot_CAM_visualizations(sounds, cams, lbls, split, opt):
     '''save the visualization of a CAM in a .png
     '''
-    fig, axs = plt.subplots(2,1)
-    axs[0].set_title(y[0])
-    axs[0].plot(sound[i, 0, 0])
-    axs[1].plot(viz.T)
-    save_path = os.path.join(opt.save, 'split{}_viz{}.png'.format(split, i))
-    fig.savefig(save_path, dpi=300)
-    fig.clf()
+    class_names = get_class_names(opt)
+
+    for i in range(3):
+        viz = cams[i].sum(axis=1)
+        fig, axs = plt.subplots(2, 1, figsize=(15, 9))
+        axs[0].set_title(class_names[lbls[i/opt.nCrops]])
+        axs[0].plot(sounds[i, 0, 0])
+        for _i in range(opt.nClasses):
+            axs[1].plot(viz[_i], label=class_names[_i])
+
+        axs[1].legend(ncol=5, bbox_to_anchor=(0., 1.02, 1., .102), loc=3)
+        save_path = os.path.join(opt.save, 'split{}_viz{}.png'.format(split, i))
+        fig.savefig(save_path, dpi=100)
+        fig.clf()
 
 
-def plot_learning():
+def plot_learning(log_path, split, opt):
     '''Reads logs and display the learning curves
     '''
     with open(log_path, "r") as f:
@@ -92,11 +137,11 @@ def plot_learning():
             logs[k] = v
     
     fig, axs = plt.subplots(2, 1, figsize=(15, 12))
+    end_mean = np.array(logs['val_acc'][-20:]).mean()
+    axs[0].set_title(str(end_mean))
     axs[0].plot(logs['train_acc'])
     axs[0].plot(logs['val_acc'])
     axs[0].set_ylim([4, 30])
-    end_mean = np.array(logs['val_acc'][-20:]).mean()
-    axs[0].set_title(str(end_mean))
     axs[1].plot(logs['train_loss'])
     save_path = os.path.join(opt.save, 'learning_split{}.png'.format(split))
     fig.savefig(save_path, dpi=100)
@@ -109,22 +154,21 @@ def main():
     for split in args.split:
         # Load data and model
         model, opt = load_model(args.save, split)
-        x, y = load_first_val_batch(opt, split)
+        opt = change_opt_wrt_args(opt, args)
+        x, lbls = load_first_val_batch(opt, split)
 
         # Compute CAMs
         y = model(x)
         cams = chainer.cuda.to_cpu(model.maps.data)
-        sound = chainer.cuda.to_cpu(x.data)
+        sounds = chainer.cuda.to_cpu(x.data)
 
         # Visualize CAMs
         if opt.GAP:
-            for i in range(3):
-                viz = cams[i].sum(axis=1)
-                plot_CAM_visualization(sound, viz, y[i])
+            plot_CAM_visualizations(sounds, cams, lbls, split, opt)
         
         # Visualize learning
-        plot_learning(log_path)
         log_path = os.path.join(opt.save, 'logger{}.txt'.format(split))
+        plot_learning(log_path, split, opt)
         
 
 if __name__ == '__main__':
