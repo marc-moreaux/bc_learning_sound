@@ -69,13 +69,47 @@ def load_first_val_batch(opt, split):
     return x, t
 
 
+def plot_CAM_visualization(sound, viz, title):
+    '''save the visualization of a CAM in a .png
+    '''
+    fig, axs = plt.subplots(2,1)
+    axs[0].set_title(y[0])
+    axs[0].plot(sound[i, 0, 0])
+    axs[1].plot(viz.T)
+    save_path = os.path.join(opt.save, 'split{}_viz{}.png'.format(split, i))
+    fig.savefig(save_path, dpi=300)
+    fig.clf()
+
+
+def plot_learning():
+    '''Reads logs and display the learning curves
+    '''
+    with open(log_path, "r") as f:
+        logs = {}
+        for line in f:
+            k, v = line.split(': ')
+            v = ast.literal_eval(v)
+            logs[k] = v
+    
+    fig, axs = plt.subplots(2, 1, figsize=(15, 12))
+    axs[0].plot(logs['train_acc'])
+    axs[0].plot(logs['val_acc'])
+    axs[0].set_ylim([4, 30])
+    end_mean = np.array(logs['val_acc'][-20:]).mean()
+    axs[0].set_title(str(end_mean))
+    axs[1].plot(logs['train_loss'])
+    save_path = os.path.join(opt.save, 'learning_split{}.png'.format(split))
+    fig.savefig(save_path, dpi=100)
+    fig.clf()
+
+
 def main():
     args = parse()
 
     for split in args.split:
         # Load data and model
         model, opt = load_model(args.save, split)
-        x, _ = load_first_val_batch(opt, split)
+        x, y = load_first_val_batch(opt, split)
 
         # Compute CAMs
         y = model(x)
@@ -86,34 +120,12 @@ def main():
         if opt.GAP:
             for i in range(3):
                 viz = cams[i].sum(axis=1)
-                fig, axs = plt.subplots(2,1)
-
-                axs[0].plot(sound[i, 0, 0])
-                axs[1].plot(viz.T)
-                save_path = os.path.join(opt.save, 'split{}_viz{}.png'.format(split, i))
-                fig.savefig(save_path, dpi=300)
-                fig.clf()
+                plot_CAM_visualization(sound, viz, y[i])
         
-        # visualize learning
+        # Visualize learning
+        plot_learning(log_path)
         log_path = os.path.join(opt.save, 'logger{}.txt'.format(split))
-        with open(log_path, "r") as f:
-            logs = {}
-            for line in f:
-                k, v = line.split(': ')
-                v = ast.literal_eval(v)
-                logs[k] = v
         
-        fig, axs = plt.subplots(2, 1, figsize=(15, 12))
-        axs[0].plot(logs['train_acc'][10:])
-        axs[0].plot(logs['val_acc'][10:])
-        axs[0].set_ylim([4, 30])
-        end_mean = np.array(logs['val_acc'][-20:]).mean()
-        axs[0].set_title(str(end_mean))
-        axs[1].plot(logs['train_loss'][10:])
-        save_path = os.path.join(opt.save, 'learning_split{}.png'.format(split))
-        fig.savefig(save_path, dpi=100)
-        fig.clf()
-
 
 if __name__ == '__main__':
     main()
