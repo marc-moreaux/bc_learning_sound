@@ -121,6 +121,10 @@ def plot_CAM_visualizations(sounds, cams, lbls, split, opt):
             axs[1].plot(viz[_i], label=class_names[_i])
 
         axs[1].legend(ncol=5, bbox_to_anchor=(0., 1.02, 1., .102), loc=3)
+        title = '{}, {}'.format(class_names[viz.max(axis=1).argmax()],
+                                class_names[viz.mean(axis=1).argmax()])
+        axs[1].set_title(title, loc='right')
+
         save_path = os.path.join(opt.save, 'split{}_viz{}.png'.format(split, i))
         fig.savefig(save_path, dpi=100)
         fig.clf()
