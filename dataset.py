@@ -13,6 +13,7 @@ class SoundDataset(chainer.dataset.DatasetMixin):
         self.train = train
         self.mix = (opt.BC and train)
         self.preprocess_funcs = self.preprocess_setup()
+        self.long_audio = False
 
     def __len__(self):
         return len(self.base)
@@ -25,7 +26,7 @@ class SoundDataset(chainer.dataset.DatasetMixin):
             
             funcs += [U.padding(self.opt.inputLength // 2),
                       U.random_crop(self.opt.inputLength),
-                      U.normalize(32768.0),
+                      U.normalize(float(2 ** 16 / 2)),  # 16 bit signed
                       ]
 
         else:
@@ -36,7 +37,7 @@ class SoundDataset(chainer.dataset.DatasetMixin):
                                       self.opt.inputLength)]
 
             funcs = [U.padding(self.opt.inputLength // 2),
-                     U.normalize(32768.0),
+                     U.normalize(float(2 ** 16 / 2)),  # 16 bit signed
                      U.multi_crop(self.opt.inputLength, self.opt.nCrops),
                      ]
 
@@ -62,6 +63,23 @@ class SoundDataset(chainer.dataset.DatasetMixin):
             # Mix two examples
             r = np.array(random.random())
             sound = U.mix(sound1, sound2, r, self.opt.fs).astype(np.float32)
+            eye = np.eye(self.opt.nClasses)
+            label = (eye[label1] * r + eye[label2] * (1 - r)).astype(np.float32)
+        
+        elif self.long_audio:  # Mix two audio on long frame
+            sound_len_sec = 10
+            sound_len = self.opt.fs * full_sound_len
+            sound = np.array(sound_len).astype(np.float32)
+
+            sound1, label1 = self.base[random.randint(0, len(self.base) - 1)]
+            sound2, label2 = self.base[random.randint(0, len(self.base) - 1)]
+            sound1 = self.preprocess(sound1)
+            sound2 = self.preprocess(sound2)
+
+            # Mix samples
+            idx1, idx2 = np.random.randint(0, sound_len - len(sound1), 2)
+            sound[idx1: idx1 + len(sound1)] = sound1
+            sound[idx2: idx2 + len(sound2)] = sound2
             eye = np.eye(self.opt.nClasses)
             label = (eye[label1] * r + eye[label2] * (1 - r)).astype(np.float32)
 
