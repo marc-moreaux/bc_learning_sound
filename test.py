@@ -12,11 +12,23 @@ import chainer
 from chainer import cuda
 from train import Trainer
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 import numpy as np
 import os
 import argparse
 import cPickle as pickle
 import ast
+import sys
+
+
+def fake_parse():
+    from argparse import Namespace
+    args = Namespace(save='./results_esc10_6',
+                     split=[1, ],
+                     noiseAugment=False,
+                     inputLength=0)
+    
+    return args
 
 
 def parse():
@@ -63,6 +75,8 @@ def get_class_names(opt):
 
 
 def fix_opt(opt):
+    if 'results_' in opt.save:
+        opt.save = opt.save.replace('results_', 'results/')
     if not 'noiseAugment' in opt:
         opt.noiseAugment = False
     return opt
@@ -152,14 +166,38 @@ def plot_learning(log_path, split, opt):
     fig.clf()
 
 
+def plot_training_waves(opt, split):
+    train_iter, val_iter = dataset.setup(opt, split)
+    batch = train_iter.next()
+    class_names = get_class_names(opt)
+
+    fig, axs = plt.subplots(8, 8, figsize=(15, 12))
+    for idx in range(8 * 8):
+        sample = batch[idx]
+        ax = axs[idx / 8][idx % 8]
+        ax.plot(sample[0])
+        ax.set_title(class_names[sample[1].argmax()])
+        ax.set_ylim(-1, 1)
+        ax.set_axis_off()
+    save_path = os.path.join(opt.save, 'samples_split{}.png'.format(split))
+    fig.savefig(save_path, dpi=100)
+    fig.clf()
+
+
 def main():
-    args = parse()
+    if len(sys.argv) > 1:
+        args = parse()
+    else:
+        args = fake_parse()
 
     for split in args.split:
         # Load data and model
         model, opt = load_model(args.save, split)
         opt = change_opt_wrt_args(opt, args)
         x, lbls = load_first_val_batch(opt, split)
+
+        # Plot training samples
+        plot_training_waves(opt, split)
 
         # Compute CAMs
         y = model(x)
