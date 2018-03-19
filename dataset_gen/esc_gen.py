@@ -52,13 +52,13 @@ def main():
 
 def convert_fs(src_path, dst_path, fs):
     print('* {} -> {}'.format(src_path, dst_path))
-    if os.path.isdir(dst_path):
-        shutil.rmtree(dst_path)
-    os.mkdir(dst_path)
+    if not os.path.isdir(dst_path):
+        os.mkdir(dst_path)
     for src_file in sorted(glob.glob(os.path.join(src_path, '*.wav'))):
-        dst_file = src_file.replace(src_path, dst_path)
-        subprocess.call('ffmpeg -i {} -ac 1 -ar {} -loglevel error -y {}'.format(
-            src_file, fs, dst_file), shell=True)
+        if not os.path.isfile(src_file):
+            dst_file = src_file.replace(src_path, dst_path)
+            subprocess.call('ffmpeg -i {} -ac 1 -ar {} -loglevel error -y {}'.format(
+                src_file, fs, dst_file), shell=True)
 
 
 def create_dataset(src_path, esc50_dst_path, esc10_dst_path):
