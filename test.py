@@ -23,7 +23,7 @@ import sys
 
 def fake_parse():
     from argparse import Namespace
-    args = Namespace(save='./results_esc10_6',
+    args = Namespace(save='./results/esc10_6',
                      split=[1, ],
                      noiseAugment=False,
                      inputLength=0)
