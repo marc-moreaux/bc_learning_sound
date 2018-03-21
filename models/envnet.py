@@ -11,6 +11,18 @@ import chainer.links as L
 from convbnrelu import ConvBNReLU
 
 
+_opt = {'stride': 'same'}
+
+
+def _max_pooling_2d(x, ksize, _opt):
+    if _opt['stride'] == 'same':
+        return max_pooling_2d(x, ksize)
+    else:
+        stride = list(ksize)
+        stride[-1] = 1
+        return max_pooling_2d(x, ksize, stride)
+
+
 class EnvNet(chainer.Chain):
     def __init__(self, n_classes, **kwargs):
         super(EnvNet, self).__init__(
@@ -35,10 +47,10 @@ class EnvNet(chainer.Chain):
         h = F.swapaxes(h, 1, 2)
 
         h = self.conv3(h, self.train)
-        h = F.max_pooling_2d(h, 3, stride=1)
+        h = _max_pooling_2d(h, 3, _opt)
 
         h = self.conv4(h, self.train)
-        h = F.max_pooling_2d(h, (1, 3), stride=(1, 1))
+        h = _max_pooling_2d(h, (1, 3), _opt)
 
         if self.use_GAP:
             h = self.conv5(h, self.train)
