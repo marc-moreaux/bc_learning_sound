@@ -201,13 +201,16 @@ def main():
 
         # Compute CAMs
         y = model(x)
-        cams = chainer.cuda.to_cpu(model.maps.data)
-        sounds = chainer.cuda.to_cpu(x.data)
+        try:
+            cams = chainer.cuda.to_cpu(model.maps.data)
+            sounds = chainer.cuda.to_cpu(x.data)
 
-        # Visualize CAMs
-        if opt.GAP:
-            plot_CAM_visualizations(sounds, cams, lbls, split, opt)
-        
+            # Visualize CAMs
+            if opt.GAP:
+                plot_CAM_visualizations(sounds, cams, lbls, split, opt)
+        except:
+            print 'CAMS part failed for {}'.format(args.save)
+
         # Visualize learning
         log_path = os.path.join(opt.save, 'logger{}.txt'.format(split))
         plot_learning(log_path, split, opt)
