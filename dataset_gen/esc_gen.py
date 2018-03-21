@@ -1,6 +1,6 @@
 """
  Dataset preparation code for ESC-50 and ESC-10 [Piczak, 2015].
- Usage: python esc_gen.py [path]
+ Usage: python esc_gen.py --save [path]
  FFmpeg should be installed.
 
 """
@@ -9,18 +9,28 @@ import sys
 import os
 import subprocess
 import shutil
+import argparse
 
 import glob
 import numpy as np
 import wavio
 
 
-DEBUG = False
+def parse():
+    parser = argparse.ArgumentParser(description='Dataset parameters parser')
+
+    parser.add_argument('--save', required=True, help='The datapath')
+    parser.add_argument('--DEBUG', action='store_false', help='debug mode')
+    parser.add_argument('--threshold_sound', type=float, default=0, help='sound threshold')
+
+    args = parser.parse_args()
+    return args
 
 
 def main():
-    esc50_path = os.path.join(sys.argv[1], 'esc50')
-    esc10_path = os.path.join(sys.argv[1], 'esc10')
+    args = parse()
+    esc50_path = os.path.join(args.save, 'esc50')
+    esc10_path = os.path.join(args.save, 'esc10')
     if not os.path.isdir(esc50_path):
         os.mkdir(esc50_path)
     if not os.path.isdir(esc10_path):
@@ -54,7 +64,8 @@ def main():
         create_dataset(src_path,
                        os.path.join(esc50_path, 'wav{}.npz'.format(fs // 1000)),
                        os.path.join(esc10_path, 'wav{}.npz'.format(fs // 1000)),
-                       fs)
+                       fs,
+                       args)
 
 
 def convert_fs(src_path, dst_path, fs):
@@ -73,7 +84,8 @@ def filter_silent_audio(sound,
                         m_section_t=0.010,
                         m_section_engy_thr=0.0005,
                         n_micro_section_thr=3,
-                        M_frame_attention_size=1.1):
+                        M_frame_attention_size=1.1,
+                        is_debug=False):
     '''Compute energy of micro-sections (of 10ms) and remove sound when
     large section mostly doesn't have energy
     
@@ -131,7 +143,7 @@ def filter_silent_audio(sound,
         new_sound[i: i + n_to_keep] = sound_to_keep
     new_sound[i + n_to_keep:] = sound_to_keep[: len(new_sound) - i - n_to_keep]
 
-    if DEBUG == True:
+    if is_debug == True:
         import matplotlib.pyplot as plt
         import sounddevice as sd
         sd.play(sound, fs)
@@ -145,7 +157,7 @@ def filter_silent_audio(sound,
     return sound
 
 
-def create_dataset(src_path, esc50_dst_path, esc10_dst_path, fs):
+def create_dataset(src_path, esc50_dst_path, esc10_dst_path, fs, args):
     print('* {} -> {}'.format(src_path, esc50_dst_path))
     print('* {} -> {}'.format(src_path, esc10_dst_path))
     esc10_classes = [0, 10, 11, 20, 38, 21, 40, 41, 1, 12]  # ESC-10 is a subset of ESC-50
@@ -162,10 +174,15 @@ def create_dataset(src_path, esc50_dst_path, esc10_dst_path, fs):
 
         for wav_file in sorted(glob.glob(os.path.join(src_path, '{}-*.wav'.format(fold)))):
             sound = wavio.read(wav_file).data.T[0]
-            start = sound.nonzero()[0].min()
-            end = sound.nonzero()[0].max()
-            # sound = sound[start: end + 1]  # Remove silent sections
-            sound = filter_silent_audio(sound, fs)
+            if args.threshold_sound == 0:  # Remove silent sections
+                start = sound.nonzero()[0].min()
+                end = sound.nonzero()[0].max()
+                sound = sound[start: end + 1]
+            else:
+                sound = filter_silent_audio(sound,
+                                            fs,
+                                            m_section_engy_thr=args.threshold_sound,
+                                            is_debug=args.DEBUG)
             label = int(os.path.splitext(wav_file)[0].split('-')[-1])
             esc50_sounds.append(sound)
             esc50_labels.append(label)
