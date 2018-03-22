@@ -27,6 +27,7 @@ def parse():
     parser.add_argument('--momentum', type=float, default=0.9)
     parser.add_argument('--GAP', action='store_true', help='Use GAP layer')
     parser.add_argument('--l1reg', type=float, default=1e-7, help='Use a L1 regularizer on maps before GAP')
+    parser.add_argument('--inputTime', type=float, default=1.5, help='Input lenght the model use to train')
 
     # Testing settings
     parser.add_argument('--nCrops', type=int, default=10)
@@ -52,10 +53,16 @@ def parse():
     # Model details
     if opt.netType == 'envnet':
         opt.fs = 16000
-        opt.inputLength = 24014
+        if opt.inputTime == 1.5:
+            opt.inputLength = 24014
+        else:
+            opt.inputLength = int(opt.inputTime * opt.fs)
     else:  # envnetv2 and stridenet
         opt.fs = 44100
-        opt.inputLength = 66650
+        if opt.inputTime == 1.5:
+            opt.inputLength = 66650
+        else:
+            opt.inputLength = int(opt.inputTime * opt.fs)
 
     # Default settings (nEpochs will be doubled if opt.BC)
     default_settings = dict()
@@ -65,7 +72,7 @@ def parse():
         'stridenet': {'nEpochs': 1000, 'LR': 0.1, 'schedule': [0.3, 0.6, 0.9], 'warmup': 10},
     }
     default_settings['esc10'] = {
-        'envnet': {'nEpochs': 600, 'LR': 0.01, 'schedule': [0.5, 0.75], 'warmup': 0},
+        'envnet': {'nEpochs': 600, 'LR': 0.01, 'schedule': [0.5, 0.7, 0.9], 'warmup': 0},
         'envnetv2': {'nEpochs': 600, 'LR': 0.01, 'schedule': [0.5, 0.75], 'warmup': 0},
         'stridenet': {'nEpochs': 600, 'LR': 0.01, 'schedule': [0.5, 0.75], 'warmup': 0},
     }
