@@ -136,28 +136,71 @@ def val_batch_gen(opt, split, remove_padding=False):
         yield xs, lbls
 
 
+def softmax(x):
+    """Compute softmax values for each sets of scores in x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum(axis=0) # only difference
+
+def get_active_intervals(mask):
+    '''On a 0/1 signal, returns idxs of intervals with one
+    '''
+    tmp1 = mask * 1
+    tmp2 = np.pad(mask, 1, 'constant')[:-2] * 1
+    start_idx = np.where((tmp1 - tmp2) == 1)[0]
+    end_idx = np.where((tmp1 - tmp2) == -1)[0]
+    if tmp1[-1] == 1:
+        end_idx = np.concatenate([end_idx, [len(tmp1),]])
+
+    return zip(start_idx, end_idx)
+
+
 def plot_CAM_visualizations(sounds, cams, lbls, split, opt, on_screen=False):
     '''save the visualization of a CAM in a .png
     '''
     class_names = get_class_names(opt)
-    for i in range(10):
+    for i in range(16):
+
         viz = cams[i].sum(axis=1)
-        fig, axs = plt.subplots(2, 1, figsize=(15, 9))
+        fig, axs = plt.subplots(4, 1, figsize=(15, 9))
+
+        # Set title
         if len(lbls.shape) == 1:
             ttl = class_names[lbls[i / opt.nCrops]]
         if len(lbls.shape) == 2:
             ttl = '{} and {}'.format(
                 class_names[lbls[i].nonzero()[0][0]],
                 class_names[lbls[i].nonzero()[0][1]] )
+        
+        # Plot sound
         axs[0].set_title(ttl)
         axs[0].plot(sounds[i, 0, 0])
+        
+        # Plot cams
         for _i in range(opt.nClasses):
             axs[1].plot(viz[_i], label=class_names[_i])
-
         axs[1].legend(ncol=5, bbox_to_anchor=(0., 1.02, 1., .102), loc=3)
         title = '{}, {}'.format(class_names[viz.max(axis=1).argmax()],
                                 class_names[viz.mean(axis=1).argmax()])
         axs[1].set_title(title, loc='right')
+
+        # Plot softmax
+        viz_mask = viz.max(axis=0) > 30
+        viz_softmax = np.nan_to_num(softmax(viz)) * viz_mask
+        axs[2].plot(viz_mask)
+
+        # Plot mask
+        viz_mask2 = np.convolve(viz_mask, np.ones(10), mode='same')
+        viz_mask2 = viz_mask2 > 3
+        axs[3].plot(viz_mask2)
+
+        # Get active intervals
+        print '--'
+        act_intervals = get_active_intervals(viz_mask2)
+        predictions = np.zeros(len(viz_mask2)) - 1
+        for start, end in act_intervals:
+            print 'prediction : ', class_names[viz[:, start: end].sum(axis=1).argmax()]
+            predictions[start: end] = viz[:, start: end].sum(axis=1).argmax()
+        axs[3].plot(predictions)
 
         _noisy = '_n' if opt.noiseAugment else ''
         save_path = os.path.join(opt.save, 'split{}_viz{}{}.png'.format(split, i, _noisy))
