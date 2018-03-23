@@ -28,6 +28,7 @@ def parse():
     parser.add_argument('--GAP', action='store_true', help='Use GAP layer')
     parser.add_argument('--l1reg', type=float, default=1e-7, help='Use a L1 regularizer on maps before GAP')
     parser.add_argument('--inputTime', type=float, default=1.5, help='Input lenght the model use to train')
+    parser.add_argument('--longAudio', type=float, default=0, help='If testing on long audio')
 
     # Testing settings
     parser.add_argument('--nCrops', type=int, default=10)

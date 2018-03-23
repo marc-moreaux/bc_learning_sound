@@ -56,19 +56,19 @@ def random_gain(db):
     return f
 
 
-def add_noise(is_train, noise_ratio, data_path, fs, output_length):
-    npz_path = join(data_path, 'noise', 'wav{}.npz'.format(fs // 1000))
-    dataset = np.load(npz_path).items()
-    train, valid = dataset['train'], dataset['valid']
+def noiseAugment(opt):
+    data_path = opt.data
+    npz_path = join(data_path, 'noise', 'wav{}.npz'.format(opt.fs // 1000))
+    dataset = dict(np.load(npz_path).items())
+    train, valid = dataset['train'][0], dataset['valid'][0]
+    valid = (valid / np.percentile(train, 95)).clip(-1, 1)
+    train = (train / np.percentile(train, 95)).clip(-1, 1)
 
-    def _next_noise(is_train):
+    def f(is_train, audio_len):
         ds = train if is_train else valid
-        rand_idx = np.random.randint(0, len(ds) - output_length - 1)
-        return ds[rand_idx: rand_idx + output_length]
-
-    def f(sound):
-        sound = sound + noise_ration * _next_noise(is_train)
-        return sound
+        ds = ds.astype(np.float32)
+        rand_idx = np.random.randint(0, len(ds) - audio_len - 1)
+        return ds[rand_idx: rand_idx + audio_len]
 
     return f
 
