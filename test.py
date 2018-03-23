@@ -23,7 +23,7 @@ import sys
 
 def fake_parse():
     from argparse import Namespace
-    args = Namespace(save='./results/esc10_6',
+    args = Namespace(save='./results/esc10_att_6',
                      split=[1, ],
                      noiseAugment=False,
                      inputLength=0)
@@ -121,15 +121,35 @@ def load_first_val_batch(opt, split):
     return x, lbls
 
 
-def plot_CAM_visualizations(sounds, cams, lbls, split, opt):
+def val_batch_gen(opt, split, remove_padding=False):
+    train_iter, val_iter = dataset.setup(opt, split)
+    
+    for batch in val_iter:
+        x_array, lbls = chainer.dataset.concat_examples(batch)
+        if opt.nCrops > 1 and opt.longAudio == 0:
+            x_array = x_array.reshape((x_array.shape[0] * opt.nCrops, x_array.shape[2]))
+        xs = chainer.Variable(cuda.to_gpu(x_array[:, None, None, :]))
+
+        if remove_padding:
+            xs = xs[:, :, :, opt.inputLength // 2 : - opt.inputLength // 2]
+
+        yield xs, lbls
+
+
+def plot_CAM_visualizations(sounds, cams, lbls, split, opt, on_screen=False):
     '''save the visualization of a CAM in a .png
     '''
     class_names = get_class_names(opt)
-
-    for i in range(3):
+    for i in range(10):
         viz = cams[i].sum(axis=1)
         fig, axs = plt.subplots(2, 1, figsize=(15, 9))
-        axs[0].set_title(class_names[lbls[i/opt.nCrops]])
+        if len(lbls.shape) == 1:
+            ttl = class_names[lbls[i / opt.nCrops]]
+        if len(lbls.shape) == 2:
+            ttl = '{} and {}'.format(
+                class_names[lbls[i].nonzero()[0][0]],
+                class_names[lbls[i].nonzero()[0][1]] )
+        axs[0].set_title(ttl)
         axs[0].plot(sounds[i, 0, 0])
         for _i in range(opt.nClasses):
             axs[1].plot(viz[_i], label=class_names[_i])
@@ -139,8 +159,12 @@ def plot_CAM_visualizations(sounds, cams, lbls, split, opt):
                                 class_names[viz.mean(axis=1).argmax()])
         axs[1].set_title(title, loc='right')
 
-        save_path = os.path.join(opt.save, 'split{}_viz{}.png'.format(split, i))
-        fig.savefig(save_path, dpi=100)
+        _noisy = '_n' if opt.noiseAugment else ''
+        save_path = os.path.join(opt.save, 'split{}_viz{}{}.png'.format(split, i, _noisy))
+        if on_screen:
+            plt.show()
+        else:
+            fig.savefig(save_path, dpi=100)
         fig.clf()
 
 
@@ -194,28 +218,61 @@ def main():
         # Load data and model
         model, opt = load_model(args.save, split)
         opt = change_opt_wrt_args(opt, args)
-        x, lbls = load_first_val_batch(opt, split)
 
         # Plot training samples
         plot_training_waves(opt, split)
 
         # Compute CAMs
-        y = model(x)
-        try:
-            cams = chainer.cuda.to_cpu(model.maps.data)
-            sounds = chainer.cuda.to_cpu(x.data)
-
-            # Visualize CAMs
+        for _ in range(2):
+            opt.noiseAugment = not opt.noiseAugment
+            x, lbls = load_first_val_batch(opt, split)
+            
+            y = model(x)
             if opt.GAP:
-                plot_CAM_visualizations(sounds, cams, lbls, split, opt)
-        except:
-            print 'CAMS part failed for {}'.format(args.save)
+                try:
+                    cams = chainer.cuda.to_cpu(model.maps.data)
+                    sounds = chainer.cuda.to_cpu(x.data)
+                    plot_CAM_visualizations(sounds, cams, lbls, split, opt, False)
+                except:
+                    print 'CAMS part failed for {}'.format(args.save)
 
         # Visualize learning
         log_path = os.path.join(opt.save, 'logger{}.txt'.format(split))
         plot_learning(log_path, split, opt)
-        
+
+
+def main2():
+    '''Evaluate localization
+    '''
+    import utils; reload(utils)
+    import dataset; reload(dataset)
+    if len(sys.argv) > 1:
+        args = parse()
+    else:
+        args = fake_parse()
+
+
+    # Iterate throw the learned models
+    for split in args.split:
+        # Load data and model
+        model, opt = load_model(args.save, split)
+        opt = change_opt_wrt_args(opt, args)
+        opt.noiseAugment = True
+        opt.batchSize = 16
+        opt.inputTime = 2.5
+        opt.longAudio = 10
+
+        # Compute CAMs
+        val_batch = val_batch_gen(opt, split, remove_padding=True)
+        x, lbls = val_batch.next()
+
+        y = model(x)
+        cams = chainer.cuda.to_cpu(model.maps.data)
+        sounds = chainer.cuda.to_cpu(x.data)
+        plot_CAM_visualizations(sounds, cams, lbls, split, opt, True)
+
 
 if __name__ == '__main__':
-    main()
+    # main()
+    pass
 
