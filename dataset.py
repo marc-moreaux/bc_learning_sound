@@ -32,8 +32,11 @@ class SoundDataset(chainer.dataset.DatasetMixin):
                       ]
 
         else:
-            funcs = [U.padding(self.opt.inputLength // 2),
-                     U.normalize(float(2 ** 16 / 2)),  # 16 bit signed
+            funcs = []
+            if not self.opt.longAudio:
+                funcs += [U.padding(self.opt.inputLength // 2)]
+            
+            funcs = [U.normalize(float(2 ** 16 / 2)),  # 16 bit signed
                      U.multi_crop(self.opt.inputLength, self.opt.nCrops)]
 
         return funcs
@@ -80,13 +83,19 @@ class SoundDataset(chainer.dataset.DatasetMixin):
             # Mix two examples on long audio
             sounds_len = max(sound1.shape[-1], sound2.shape[-1])
             idx1, idx2 = 0, 0
-            while idx1 - idx2 < sounds_len:
+            while np.abs(idx1 - idx2) < sounds_len + self.opt.fs :  ## distance is 1 sec.
                 idx1, idx2 = np.random.randint(0, sound_len - sounds_len, 2)
             sound[idx1: idx1 + len(sound1)] = sound1
             sound[idx2: idx2 + len(sound2)] = sound2
             
-            eye = np.eye(self.opt.nClasses)
-            label = (eye[label1] + eye[label2]).astype(np.float32)
+            # eye = np.eye(self.opt.nClasses)
+            # label = (eye[label1] + eye[label2]).astype(np.float32)
+            label = np.zeros(len(sound)) - 1
+            label[idx1 : idx1 + len(sound1)] = label1
+            label[idx2 : idx2 + len(sound2)] = label2
+            # print idx1, idx1+len(sound1), idx2, idx2+len(sound2)
+            # import matplotlib.pyplot as plt
+            # plt.plot(label); plt.plot(sound); plt.show()
 
         else:  # Training phase of standard learning or testing phase
             sound, label = self.base[i]

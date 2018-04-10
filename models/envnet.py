@@ -35,7 +35,7 @@ class EnvNet(chainer.Chain):
             fc6=L.Linear(4096, 4096),
             fc7=L.Linear(4096, n_classes),
 
-            conv5=ConvBNReLU(50, 50, (3, 3)),
+            conv5=ConvBNReLU(50, 50, (3, 3), use_bn=False),
             convAtt4=ConvBNReLU(50, 50, (1, 5)),
             fcAtt5=L.Linear(50 * 11 * 26, 1024),
             fcAtt6=L.Linear(1024, 3),
