@@ -37,7 +37,7 @@ def train(opt, split):
         chainer.serializers.load_npz(
             os.path.join(opt.save, 'model_split{}.npz'.format(split)), trainer.model)
         val_top1 = trainer.val()
-        print('| Val: top1 {:.2f}'.format(val_top1))        
+        print('| Val: top1 {:.2f}'.format(val_top1))
         return
 
     for epoch in range(1, opt.nEpochs + 1):

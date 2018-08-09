@@ -4,6 +4,9 @@ import chainer
 from chainer import cuda
 import chainer.functions as F
 import time
+import os
+import chainer.computational_graph as c
+
 
 import utils
 
@@ -17,6 +20,7 @@ class Trainer:
         self.opt = opt
         self.n_batches = (len(train_iter.dataset) - 1) // opt.batchSize + 1
         self.start_time = time.time()
+        self.save_graph = True
 
     def train(self, epoch):
         self.optimizer.lr = self.lr_schedule(epoch)
@@ -28,6 +32,13 @@ class Trainer:
             t = chainer.Variable(cuda.to_gpu(t_array))
             self.optimizer.zero_grads()
             y = self.model(x)
+            
+            if self.save_graph:
+                self.save_graph = False
+                with open(os.path.join(self.opt.save, 'model_graph.dot'), 'w') as f:
+                    g = c.build_computational_graph((y, ))
+                    f.write(g.dump())
+
             if self.opt.BC:
                 loss = utils.kl_divergence(y, t)
                 acc = F.accuracy(y, F.argmax(t, axis=1))

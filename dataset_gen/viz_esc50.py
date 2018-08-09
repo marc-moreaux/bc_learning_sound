@@ -3,7 +3,7 @@ import numpy as np
 import os
 
 
-DATASET_PATH = '/home/moreaux/Dataset/ENVNET_DB/esc10/wav16.npz'
+DATASET_PATH = '/home/moreaux-gpu/Dataset/ENVNET_DB/esc10/wav16.npz'
 
 dataset = np.load(DATASET_PATH)
 sounds = dataset['fold1'].item()['sounds']

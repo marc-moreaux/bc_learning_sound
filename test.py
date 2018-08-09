@@ -20,6 +20,7 @@ import itertools
 import cPickle as pickle
 import ast
 import sys
+from sklearn.metrics import confusion_matrix
 
 
 # General loading functions
@@ -74,7 +75,7 @@ def get_class_names(opt, add_void=False):
             class_names = {i: class_names[c_idx] for i, c_idx in enumerate(esc10_classes)}
     
     if add_void:
-        class_names[-1] = 'void'
+        class_names[-1] = 'silence'
 
     return class_names
 
@@ -157,20 +158,23 @@ def get_active_intervals(mask):
     return zip(start_idx, end_idx)
 
 
-def shrinked_labels_for_loc(lbls, window_size=6735, window_step=1440):
-    # Envnet's window_size
-    # Envnet's window_stride
-    # gts = []
-    # for i in range(len(lbls)):
-    #     gt_mask = (np.convolve(lbls[i] != -1, np.ones(window_size), 'valid') > window_size / 2)[::window_step]
-    #     gt = gt_mask * lbls[i][window_size/2 : -window_size/2 : window_step]
-    #     gt[~gt_mask ] = -1
-    #     gts.append(gt)
+def shrinked_labels_for_loc(lbls, window_size=20570, window_step=3072):
+    '''
+    Reduces size of lbls to the same size as GAP layer
+    params
+        window_size: size of a Envnet window (computed going up the conv stack)
+        window_step: size of a Envnet step (space btw each GAP points)
+        Envnet10: wsi=8174, wst=1440
+        Envnet50: wsi=20570, wst=3072
+    '''
+    window_size = window_size - window_step + 1
+    print(lbls.shape, window_size/2)
     gts = lbls[:, window_size/2 : -window_size/2 : window_step]
     return np.array(gts)
 
 
-def scale_pred_at_fs(pred, lbl_len, window_size=6735, window_step=1440):
+def scale_pred_at_fs(pred, lbl_len, window_size=20570, window_step=3072):
+    window_size = window_size - window_step + 1
     scaled_pred = np.zeros(lbl_len) - 1
     scaled_pred[:window_size/2 + window_step/2] = pred[0]
     scaled_pred[-window_size/2 - window_step/2:] = pred[-1]
@@ -219,7 +223,7 @@ def evaluate_localisation(cams, lbls, act_thrld=30, act_window=10, min_act_per_w
         TN = (gt[gt == pred] == -1).sum() / float(len(pred))  # gt and pred are negatives
         TP = (pred[gt == pred] != -1).sum() / float(len(pred))  # stg predicted is good
         FP = (pred[gt != pred] != -1).sum() / float(len(pred))  # stg predicted isn't good
-        conf_matrix = confusion_matrix(gt, pred, range(-1,10))
+        conf_matrix = confusion_matrix(gt, pred, range(-1,50))
         ommission = pred[gt != -1] == -1
         ommission = pred[gt != -1] != gt[gt != -1]
         insertion = pred[pred != -1] != gt[pred != -1]
@@ -360,7 +364,7 @@ def plot_confusion_matrix(cm, classes, opt, split,
     if on_screen:
         plt.show()
     else:
-        plt.savefig(save_path, dpi=100)
+        plt.savefig(save_path, dpi=900)
         plt.clf()
 
 
@@ -420,7 +424,7 @@ def main2():
 
         # Compute CAMs
         metrics = []
-        for _ in range(5):
+        for _ in range(100):
             val_batch = val_batch_gen(opt, split, remove_padding=False)
             x, lbls = val_batch.next()
 
@@ -441,6 +445,6 @@ def main2():
 
 
 if __name__ == '__main__':
-    # main()
+    main2()
     pass
 

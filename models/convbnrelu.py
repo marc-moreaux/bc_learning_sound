@@ -24,15 +24,35 @@ class ConvBNReLU(chainer.Chain):
 
 class ConvBNSig(chainer.Chain):
     def __init__(self, in_channels, out_channels, ksize, stride=1, pad=0,
-                 initialW=chainer.initializers.HeNormal(), nobias=True):
+                 initialW=chainer.initializers.HeNormal(), nobias=True, use_bn=True):
         super(ConvBNSig, self).__init__(
             conv=L.Convolution2D(in_channels, out_channels, ksize, stride, pad,
                                  initialW=initialW, nobias=nobias),
             bn=L.BatchNormalization(out_channels)
         )
+        self.use_bn=use_bn
 
     def __call__(self, x, train):
         h = self.conv(x)
-        h = self.bn(h, test=not train)
+        if self.use_bn:
+            h = self.bn(h, test=not train)
 
         return F.sigmoid(h)
+
+
+class ConvBN(chainer.Chain):
+    def __init__(self, in_channels, out_channels, ksize, stride=1, pad=0,
+                 initialW=chainer.initializers.HeNormal(), nobias=True, use_bn=True):
+        super(ConvBN, self).__init__(
+            conv=L.Convolution2D(in_channels, out_channels, ksize, stride, pad,
+                                 initialW=initialW, nobias=nobias),
+            bn=L.BatchNormalization(out_channels)
+        )
+        self.use_bn=use_bn
+
+    def __call__(self, x, train):
+        h = self.conv(x)
+        if self.use_bn:
+            h = self.bn(h, test=not train)
+
+        return h

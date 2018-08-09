@@ -8,11 +8,11 @@
 import chainer
 import chainer.functions as F
 import chainer.links as L
-from convbnrelu import ConvBNReLU
+from convbnrelu import ConvBNReLU, ConvBNSig, ConvBN
 
 
 _opt = {'stride': 'same',
-        'use_attention': True}
+        'use_attention': 0}
 
 
 def _max_pooling_2d(x, ksize, _opt):
@@ -36,12 +36,29 @@ class EnvNet(chainer.Chain):
             fc7=L.Linear(4096, n_classes),
 
             conv5=ConvBNReLU(50, 50, (3, 3), use_bn=False),
-            convAtt4=ConvBNReLU(50, 50, (1, 5)),
+            convAtt4 = ConvBNSig(50, 50, (1, 5)),
+            convAtt5 = ConvBNReLU(50, 50, (1, 5)),
             fcAtt5=L.Linear(50 * 11 * 26, 1024),
             fcAtt6=L.Linear(1024, 3),
             convGAP=ConvBNReLU(50, n_classes, (1, 1)),
         )
         self.train = True
+        if _opt['use_attention'] == 1:
+            self.convAtt4 = ConvBNSig(50, 50, (1, 5), pad=(0,1))
+        if _opt['use_attention'] == 2:
+            self.convAtt4 = ConvBNReLU(50, 50, (1, 5))
+        if _opt['use_attention'] == 3:
+            self.convAtt4 = ConvBNReLU(50, 50, (1, 5), pad=(0,1))
+        if _opt['use_attention'] == 4:
+            self.convAtt4 = ConvBNSig(50, 50, (1, 5), pad=(0,1))
+        if _opt['use_attention'] == 5:
+            self.convAtt4 = ConvBN(50, 50, (1, 5), pad=(0,1))
+        if _opt['use_attention'] == 6:
+            self.convAtt4 = ConvBN(50, 50, (1, 5), pad=(0,2))
+        if _opt['use_attention'] == 7:
+            self.convAtt4 = ConvBNReLU(50, 50, (1, 5), pad=(0,2))
+        
+        self.use_GAP = False
         if 'GAP' in kwargs.keys():
             self.use_GAP = kwargs['GAP']
 
@@ -53,34 +70,61 @@ class EnvNet(chainer.Chain):
 
         h = self.conv3(h, self.train)
         h3 = _max_pooling_2d(h, 3, _opt)
+        self.h3 = h3
 
         h = self.conv4(h3, self.train)
+        self.h = h
 
         # Attention mechanism
-        if _opt['use_attention']:
+        if _opt['use_attention'] == 0:
             h_att = self.convAtt4(h3, self.train)
-            
-            h_att = F.sigmoid(h_att)
             h = h * h_att
 
-            # # Other way...
-            # h_att = self.convAtt4(h3, self.train)
-            # h_att = F.max_pooling_2d(h, 3)
-            # h_att = F.dropout(F.relu(fcAtt5(h)), train=train)
-            # h_att = fcAtt6(h)
+        if _opt['use_attention'] == 1:
+            h_att = F.max_pooling_2d(h3, 2)
+            h_att = self.convAtt4(h_att, self.train)
+            h_att = F.unpooling_2d(h_att, 2, outsize=h.shape[-2:])
+            h = h * h_att
 
-            # n_padding = x_len / 2
-            # center, width, gain = F.split_axis(h, 3, axis=1)  # split resulting vec in 2
-            # center = F.tanh(center)
-            # width = F.sigmoid(width)
-            # gain = F.sigmoid(gain)
-            # center = (center + 1) * (x_len / 2)
-            # width = width * x_len
-            # left = padding + center - width/2
-            # right = padding + center + width/2
+        if _opt['use_attention'] == 2:
+            h_att = self.convAtt4(h3, self.train)
+            h_att = F.softmax(h_att, axis=3)
+            h = h * h_att
 
-            # x = F.pad(x, n_padding)
-            # x = x[:, 1, 1, left: right] * gain
+        if _opt['use_attention'] == 3:
+            h_att = F.max_pooling_2d(h3, 2)
+            h_att = self.convAtt4(h_att, self.train)
+            h_att = F.softmax(h_att, axis=3)
+            h_att = F.unpooling_2d(h_att, 2, outsize=h.shape[-2:])
+            h = h * h_att
+        
+        if _opt['use_attention'] == 4:
+            h_att = F.max_pooling_2d(h3, 2)
+            h_att = self.convAtt4(h_att, self.train)
+            h_att = F.softmax(h_att, axis=3)
+            h_att = F.unpooling_2d(h_att, 2, outsize=h.shape[-2:])
+            h = h * h_att
+        
+        if _opt['use_attention'] == 5:
+            h_att = F.max_pooling_2d(h3, 2)
+            h_att = self.convAtt4(h_att, self.train)
+            h_att = F.softmax(h_att, axis=3)
+            h_att = F.unpooling_2d(h_att, 2, outsize=h.shape[-2:])
+            h = h * h_att
+        
+        if _opt['use_attention'] == 6:
+            h_att = F.max_pooling_2d(h3, 5)
+            h_att = self.convAtt4(h_att, self.train)
+            h_att = F.softmax(h_att, axis=3)
+            h_att = F.unpooling_2d(h_att, 5, outsize=h.shape[-2:])
+            h = h * h_att
+
+        if _opt['use_attention'] == 7:
+            h_att = F.max_pooling_2d(h3, (1, 5))
+            h_att = self.convAtt4(h_att, self.train)
+            h_att = F.softmax(h_att, axis=3)
+            h_att = F.unpooling_2d(h_att, (1,5), outsize=self.h.shape[-2:])
+            h = h * h_att
 
         h = _max_pooling_2d(h, (1, 3), _opt)
 
@@ -99,4 +143,3 @@ class EnvNet(chainer.Chain):
             print h.shape
 
         return self.fc7(h)
-        

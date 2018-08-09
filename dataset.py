@@ -36,8 +36,8 @@ class SoundDataset(chainer.dataset.DatasetMixin):
             if not self.opt.longAudio:
                 funcs += [U.padding(self.opt.inputLength // 2)]
             
-            funcs = [U.normalize(float(2 ** 16 / 2)),  # 16 bit signed
-                     U.multi_crop(self.opt.inputLength, self.opt.nCrops)]
+            funcs += [U.normalize(float(2 ** 16 / 2)),  # 16 bit signed
+                      U.multi_crop(self.opt.inputLength, self.opt.nCrops)]
 
         return funcs
 
@@ -64,7 +64,7 @@ class SoundDataset(chainer.dataset.DatasetMixin):
             eye = np.eye(self.opt.nClasses)
             label = (eye[label1] * r + eye[label2] * (1 - r)).astype(np.float32)
         
-        elif self.opt.longAudio > 0:  # Mix two audio on long frame
+        elif self.opt.longAudio > 0:  # Mix two audio on long frame (for testing)
             sound_len_sec = self.opt.longAudio
             sound_len = int(self.opt.fs * sound_len_sec)
             sound = np.zeros(sound_len).astype(np.float32)
@@ -99,7 +99,8 @@ class SoundDataset(chainer.dataset.DatasetMixin):
 
         else:  # Training phase of standard learning or testing phase
             sound, label = self.base[i]
-            sound = self.preprocess(sound).astype(np.float32)
+            sound = self.preprocess(sound)
+            sound = sound.astype(np.float32)
             label = np.array(label, dtype=np.int32)
         
         if self.opt.noiseAugment:

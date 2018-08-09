@@ -154,3 +154,10 @@ def to_hms(time):
         line = '{}m{:02d}s'.format(m, s)
 
     return line
+
+
+
+# y = chainer.Variable(cuda.to_gpu(np.array([[.1,.9,0],[.8,.2,0]])))
+# t = chainer.Variable(cuda.to_gpu(np.array([[0,1.,0],[1,0,0]])))
+
+# kl_divergence(y, t).data

@@ -32,6 +32,8 @@ class EnvNetv2(chainer.Chain):
         self.train = True
         if 'GAP' in kwargs.keys():
             self.use_GAP = kwargs['GAP']
+            self.use_bypass = kwargs['bypass']
+            self.BPconv = []
 
     def __call__(self, x):
         h = self.conv1(x, self.train)
