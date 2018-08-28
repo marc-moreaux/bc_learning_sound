@@ -47,7 +47,11 @@ class Trainer:
                 acc = F.accuracy(y, t)
 
             if self.opt.GAP is not False:
-                loss += self.opt.l1reg * F.sum(self.model.maps)
+                if type(self.model.maps) is list:
+                    for m in self.model.maps:
+                        loss += self.opt.l1reg * F.sum(m)
+                else:
+                    loss += self.opt.l1reg * F.sum(self.model.maps)
             loss.backward()
             self.optimizer.update()
             train_loss += float(loss.data) * len(t.data)
