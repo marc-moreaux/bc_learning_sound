@@ -30,9 +30,12 @@ class EnvNetv2(chainer.Chain):
             fc13=L.Linear(4096, n_classes),
         )
         self.train = True
+        self.use_GAP = False
+        self.use_bypass = False 
         self.maps = []
         if 'GAP' in kwargs.keys():
             self.use_GAP = kwargs['GAP']
+        if 'bypass' in kwargs.keys():
             self.use_bypass = kwargs['bypass']
             self.BPlayers = []
 

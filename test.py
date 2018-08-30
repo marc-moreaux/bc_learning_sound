@@ -58,7 +58,7 @@ def parse():
     args = parser.parse_args()
 
     # Reformat arguments if necessary
-    args.split = [1, 2, 3, 4, 5] if args.split == -1  else [args.split]
+    args.split = [1, 2, 3, 4, 5] if args.split == -1 else [args.split]
 
     return args
 
@@ -186,26 +186,33 @@ def scale_pred_at_fs(pred, lbl_len, window_size=20570, window_step=3072):
     return scaled_pred
 
 
-def get_localisation_prediction(cam, act_thrld=30, act_window=10, min_act_per_window=3):
+def get_localisation_prediction(cam,
+                                act_thrld=30,
+                                act_window=10,
+                                min_act_per_window=3,
+                                zero_activations=None):
     '''Retrieve localisation of filtered masks and compute CAM on that zone
     returns a vector (lengnt = len(cam)) filled with '-1' when nothing is seen and the 
     class predicted elsewhere
     '''
-    viz = cam.sum(axis=1)
-    viz_mask = viz.max(axis=0) > act_thrld
-    viz_mask2 = np.convolve(viz_mask, np.ones(act_window), mode='same')
-    viz_mask2 = viz_mask2 > min_act_per_window
-
-    # Get active intervals
-    act_intervals = get_active_intervals(viz_mask2)
-    predictions = np.zeros(len(viz_mask2)) - 1
-    for start, end in act_intervals:
-        predictions[start: end] = viz[:, start: end].sum(axis=1).argmax()
+    viz = cam.mean(axis=1)
+    if zero_activations is not None:
+        viz = (viz.T - zero_activations).T
+    
+    c_mask = viz > act_thrld
+    c_mask2 = np.array([np.convolve(c_mask[c], np.ones(act_window), mode='same')
+                        for c in range(len(cam))])
+    predictions = c_mask2.argmax(axis=0) * (c_mask2.max(axis=0) >= min_act_per_window)
+    predictions = predictions + (c_mask2.max(axis=0) >= min_act_per_window) - 1
 
     return predictions
 
 
-def evaluate_localisation(cams, lbls, act_thrld=30, act_window=10, min_act_per_window=3):
+def evaluate_localisation(cams, lbls,
+                          act_thrld=30,
+                          act_window=10,
+                          min_act_per_window=3,
+                          zero_activations=None):
     #gts = shrinked_labels_for_loc(lbls)
     gts = lbls
 
@@ -213,10 +220,12 @@ def evaluate_localisation(cams, lbls, act_thrld=30, act_window=10, min_act_per_w
     for i in range(len(lbls)):
         gt = gts[i]
         cam = cams[i]
-        pred = get_localisation_prediction(cam,
+        pred = get_localisation_prediction(
+            cam,
             act_thrld=act_thrld,
             act_window=act_window,
-            min_act_per_window=min_act_per_window)
+            min_act_per_window=min_act_per_window,
+            zero_activations=zero_activations)
         pred = scale_pred_at_fs(pred, len(gt))
 
         FN = (pred[gt != pred] == -1).sum() / float(len(pred))  # gt isn't met by pred
@@ -237,15 +246,25 @@ def evaluate_localisation(cams, lbls, act_thrld=30, act_window=10, min_act_per_w
 
 
 # Plotting functions
-def plot_CAM_visualizations(sounds, cams, lbls, split, opt, on_screen=False):
+def plot_CAM_visualizations(sounds,
+                            cams,
+                            lbls,
+                            split,
+                            opt,
+                            on_screen,
+                            act_thrld,
+                            act_window,
+                            min_act_per_window,
+                            zero_activations=None):
     '''save the visualization of a CAM in a .png
     '''
     class_names = get_class_names(opt)
     gts = shrinked_labels_for_loc(lbls)
     gts = lbls
     for i in range(5):
-
-        viz = cams[i].sum(axis=1)
+        viz = cams[i].mean(axis=1)
+        if zero_activations is not None:
+            viz = (viz.T - zero_activations).T
         fig, axs = plt.subplots(2, 1, figsize=(15, 6))
 
         # Set title
@@ -259,13 +278,17 @@ def plot_CAM_visualizations(sounds, cams, lbls, split, opt, on_screen=False):
                 class_names[_lbl[1]] )
         
         # Plot sound
-        pred = get_localisation_prediction(cams[i])
+        pred = get_localisation_prediction(cams[i],
+                                           act_thrld=act_thrld,
+                                           act_window=act_window,
+                                           min_act_per_window=min_act_per_window,
+                                           zero_activations=zero_activations)
         pred = scale_pred_at_fs(pred, len(gts[0]))        
         axs[0].set_title(ttl)
         axs[0].plot(sounds[i, 0, 0])
-        axs[0].plot(pred/2. - 2)
-        axs[0].plot(lbls[i]/2. - 2)
-        axs[0].set_ylim(-2.5, 2.5)
+        axs[0].plot(pred/10. - 2.5)
+        axs[0].plot(lbls[i]/10. - 2.5)
+        axs[0].set_ylim(-2.6, 2.6)
         axs[0].set_axis_off()
         
         # Plot cams
@@ -281,7 +304,7 @@ def plot_CAM_visualizations(sounds, cams, lbls, split, opt, on_screen=False):
         if on_screen:
             plt.show()
         else:
-            fig.savefig(save_path, dpi=100)
+            fig.savefig(save_path, dpi=300)
         fig.clf()
 
 
@@ -341,22 +364,25 @@ def plot_confusion_matrix(cm, classes, opt, split,
 
     print(cm)
 
-    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    fig, ax = plt.subplots(1, 1, figsize=(22, 22))
+    ax.imshow(cm, interpolation='nearest', cmap=cmap)
     # plt.colorbar()
     tick_marks = np.arange(len(classes))
-    plt.xticks(tick_marks, classes, rotation=45)
-    plt.yticks(tick_marks, classes)
+    ax.set_xticks(tick_marks)
+    ax.set_xticklabels(classes, rotation=45)
+    ax.set_yticks(tick_marks)
+    ax.set_yticklabels(classes)
 
     fmt = '1.1f' if normalize else 'd'
     thresh = cm.max() / 2.
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        plt.text(j, i, format(cm[i, j], fmt),
+        ax.text(j, i, format(cm[i, j], fmt),
                  horizontalalignment="center",
                  color="white" if cm[i, j] > thresh else "black")
 
-    plt.tight_layout()
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
+    fig.tight_layout()
+    ax.set_ylabel('True label')
+    ax.set_xlabel('Predicted label')
 
     _noisy = '_n' if opt.noiseAugment else ''
     save_path = os.path.join(opt.save, 'split{}_cm{}.png'.format(split, _noisy))
@@ -364,8 +390,18 @@ def plot_confusion_matrix(cm, classes, opt, split,
     if on_screen:
         plt.show()
     else:
-        plt.savefig(save_path, dpi=900)
+        plt.savefig(save_path, dpi=300)
         plt.clf()
+
+
+def null_audio_activations(model):
+    zeros = np.zeros((1,1,1,100000), dtype=np.float32)
+    zeros = chainer.Variable(cuda.to_gpu(zeros))
+    y = model(zeros)
+    cams = chainer.cuda.to_cpu(model.maps.data)
+    zero_activations = cams[0].mean(axis=1)[:, 0]
+
+    return zero_activations
 
 
 def main():
@@ -386,8 +422,8 @@ def main():
         for _ in range(2):
             opt.noiseAugment = not opt.noiseAugment
             x, lbls = load_first_val_batch(opt, split)
-            
             y = model(x)
+            
             if opt.GAP:
                 try:
                     cams = chainer.cuda.to_cpu(model.maps.data)
@@ -416,6 +452,8 @@ def main2():
     for split in args.split:
         # Load data and model
         model, opt = load_model(args.save, split)
+        zero_activations = null_audio_activations(model)
+        zero_activations = None 
         opt = change_opt_wrt_args(opt, args)
         opt.noiseAugment = True
         opt.batchSize = 16
@@ -427,21 +465,39 @@ def main2():
         for _ in range(100):
             val_batch = val_batch_gen(opt, split, remove_padding=False)
             x, lbls = val_batch.next()
-
             y = model(x)
+            
             cams = chainer.cuda.to_cpu(model.maps.data)
-            metrics.extend(evaluate_localisation(cams, lbls, act_thrld=30, act_window=7, min_act_per_window=3))
+            metrics.extend(evaluate_localisation(cams,
+                                                 lbls,
+                                                 act_thrld=7,
+                                                 act_window=7,
+                                                 min_act_per_window=3,
+                                                 zero_activations=None))
         
         a_metrics.extend(metrics)
         ommission, insertion, acc, FN, TP, FP, TN, conf_matrix = map(np.array, zip(*metrics))
         conf_matrix = conf_matrix.sum(axis=0)
-        print ommission.mean(), insertion.mean(), acc.mean(), (ommission + insertion).mean(), FN.mean(), TP.mean(), FP.mean(), TN.mean()
+        print("ommission {}, insertion {}, acc {}, omm & ins {}, FN {}, TP {}, FP {}, TN {}",
+              ommission.mean(), insertion.mean(), acc.mean(),
+              (ommission + insertion).mean(),
+              FN.mean(), TP.mean(), FP.mean(), TN.mean())
 
         c_names = get_class_names(opt, add_void=True)
         c_names = [c_names[k] for k in sorted(c_names.keys())]
-        plot_confusion_matrix(conf_matrix, c_names, opt, split, normalize=True, on_screen=False)
+        plot_confusion_matrix(conf_matrix, c_names, opt,
+                              split, normalize=True, on_screen=False)
         sounds = chainer.cuda.to_cpu(x.data)
-        plot_CAM_visualizations(sounds, cams, lbls, split, opt, False)
+        plot_CAM_visualizations(sounds,
+                                cams,
+                                lbls,
+                                split,
+                                opt,
+                                False,
+                                act_thrld=7,
+                                act_window=7,
+                                min_act_per_window=3,
+                                zero_activations=None)
 
 
 if __name__ == '__main__':
