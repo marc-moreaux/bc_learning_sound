@@ -26,10 +26,17 @@ from sklearn.metrics import confusion_matrix
 # General loading functions
 def fake_parse():
     from argparse import Namespace
-    args = Namespace(save='./results/esc10_att_7b',
-                     split=[1, ],
-                     noiseAugment=False,
-                     inputLength=0)
+    args = Namespace(
+        save='./results/esc10_att_7b',
+        split=1,
+        noiseAugment=False,
+        inputLength=0,
+        act_thrld=4,
+        act_window=7,
+        min_act_per_window=3,
+        use_zero_activations=True,
+        n_batch_eval=100,
+        store_cm=False)
     
     return args
 
@@ -43,8 +50,7 @@ def parse():
         help='Directory where the model was saved')
     parser.add_argument(
         '--split',
-        type=int,
-        default=-1,
+        type=int, default=-1,
         help='esc: 1-5, urbansound: 1-10 (-1: run on all splits)')
     parser.add_argument(
         '--noiseAugment',
@@ -52,11 +58,38 @@ def parse():
         help='Add some noise when training')
     parser.add_argument(
         '--inputLength',
-        type=int,
-        default=0,
+        type=int, default=0,
         help='change prefered input size')
+    parser.add_argument(
+        '--act_thrld',
+        type=int, default=7,
+        help='activation thresold for audio localization')
+    parser.add_argument(
+        '--act_window',
+        type=int, default=7,
+        help='window size for audio localization')
+    parser.add_argument(
+        '--min_act_per_window',
+        type=int, default=3,
+        help='amount of detected sounds to be considered TP')
+    parser.add_argument(
+        '--use_zero_activations',
+        action='store_true',
+        help='remove the bias gotten when null audio is inserted')
+    parser.add_argument(
+        '--n_batch_eval',
+        type=int, default=100,
+        help='how many batches should be used for localization evaluation')
+    parser.add_argument(
+        '--store_cm',
+        action='store_true',
+        help='if called, stores the confusion matrix')
     args = parser.parse_args()
 
+    args._str = 'th{}_win{}_actPwin{}_inLen{}_nBatch{}_nAug{}_zeroAct{}'.format(
+        args.act_thrld, args.act_window, args.min_act_per_window,
+        args.inputLength, args.n_batch_eval, args.noiseAugment, args.use_zero_activations)
+       
     # Reformat arguments if necessary
     args.split = [1, 2, 3, 4, 5] if args.split == -1 else [args.split]
 
@@ -98,7 +131,7 @@ def change_opt_wrt_args(opt, args):
 
 
 # Model and sample loading
-def load_model(save_path, split):
+def load_model(save_path, split, args):
     '''Load a model stored at <save_path> on split <split>
     '''
     # Load opt
@@ -111,7 +144,10 @@ def load_model(save_path, split):
     chainer.serializers.load_npz(
         os.path.join(opt.save, 'model_split{}.npz'.format(split)), model)
     model.to_gpu()
-
+  
+    opt.save = os.path.join(opt.save, args._str)
+    if not os.path.isdir(opt.save):
+        os.makedirs(opt.save)
     return model, opt
 
 
@@ -128,19 +164,51 @@ def load_first_val_batch(opt, split):
     return x, lbls
 
 
-def val_batch_gen(opt, split, remove_padding=False):
-    train_iter, val_iter = dataset.setup(opt, split)
+def val_batch_gen(opt, split, remove_padding=False, to_gpu=True):
+    train_iter, val_iter = dataset.setup(opt, split, repeat=True)
     
     for batch in val_iter:
         x_array, lbls = chainer.dataset.concat_examples(batch)
         if opt.nCrops > 1 and opt.longAudio == 0:
             x_array = x_array.reshape((x_array.shape[0] * opt.nCrops, x_array.shape[2]))
-        xs = chainer.Variable(cuda.to_gpu(x_array[:, None, None, :]))
+        if to_gpu:
+            xs = chainer.Variable(cuda.to_gpu(x_array[:, None, None, :]))
+        else:
+            xs = x_array
 
         if remove_padding:
             xs = xs[:, :, :, opt.inputLength // 2 : - opt.inputLength // 2]
             lbls = lbls[:, opt.inputLength // 2 : - opt.inputLength // 2]
 
+        yield xs, lbls
+
+
+def val_batch_dataset(opt, split, remove_padding=False, n_samples=100):
+    import cPickle as pkl
+    import os
+    data_path = '/tmp/esc50-split' + str(split) + '-aug.npy'
+
+    # Load dataset
+    if not os.path.isfile(data_path):
+        val_dataset = dict()
+        val_dataset['opt'] = opt
+        val_dataset['data'] = list()
+        val_data = val_batch_gen(opt, split, remove_padding=remove_padding, to_gpu=False)
+        for _ in range(n_samples):
+            xs, lbls = next(val_data)
+            val_dataset['data'].append((xs, lbls))
+        
+        # Dump dataset
+        with open(data_path, 'wb') as f:
+            pkl.dump(val_dataset, f, protocol=pickle.HIGHEST_PROTOCOL)
+            print('created new test dataset')
+    else:
+        with open(data_path, 'rb') as f:
+            val_dataset = pickle.load(f)
+
+    for i in range(n_samples):
+        xs, lbls = val_dataset['data'][i]
+        xs = chainer.Variable(cuda.to_gpu(x_array[:, None, None, :]))
         yield xs, lbls
 
 
@@ -212,7 +280,8 @@ def evaluate_localisation(cams, lbls,
                           act_thrld=30,
                           act_window=10,
                           min_act_per_window=3,
-                          zero_activations=None):
+                          zero_activations=None,
+                          use_cm=True):
     #gts = shrinked_labels_for_loc(lbls)
     gts = lbls
 
@@ -232,14 +301,15 @@ def evaluate_localisation(cams, lbls,
         TN = (gt[gt == pred] == -1).sum() / float(len(pred))  # gt and pred are negatives
         TP = (pred[gt == pred] != -1).sum() / float(len(pred))  # stg predicted is good
         FP = (pred[gt != pred] != -1).sum() / float(len(pred))  # stg predicted isn't good
-        conf_matrix = confusion_matrix(gt, pred, range(-1,50))
-        ommission = pred[gt != -1] == -1
         ommission = pred[gt != -1] != gt[gt != -1]
         insertion = pred[pred != -1] != gt[pred != -1]
         accuracy = gt == pred
         ommission = ommission.mean() if len(ommission) > 0 else 0
         insertion = insertion.mean() if len(insertion) > 0 else 0
         accuracy = accuracy.mean() if len(accuracy) > 0 else 0
+        conf_matrix = None
+        if use_cm:
+            conf_matrix = confusion_matrix(gt, pred, range(-1,50))
         metrics.append((ommission, insertion, accuracy, FN, TP, FP, TN, conf_matrix))
     
     return metrics
@@ -303,8 +373,10 @@ def plot_CAM_visualizations(sounds,
         save_path = os.path.join(opt.save, 'split{}_viz{}{}.png'.format(split, i, _noisy))
         if on_screen:
             plt.show()
+            plt.gcf().clear()
         else:
             fig.savefig(save_path, dpi=300)
+            plt.close()
         fig.clf()
 
 
@@ -356,42 +428,42 @@ def plot_confusion_matrix(cm, classes, opt, split,
     This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
     """
+    cms = [cm]
     if normalize:
-        cm = cm.astype('float') * 100 / cm.sum(axis=1)[:, np.newaxis]
-        print("Normalized confusion matrix")
-    else:
-        print('Confusion matrix, without normalization')
+        cms = [ cm.astype('float') * 100 / cm.sum(axis=0)[:, np.newaxis],
+                cm.astype('float') * 100 / cm.sum(axis=1)[:, np.newaxis] ]
 
-    print(cm)
+    for cm_idx, cm in enumerate(cms):
+        fig, ax = plt.subplots(1, 1, figsize=(22, 22))
+        ax.imshow(cm, interpolation='nearest', cmap=cmap)
+        # plt.colorbar()
+        tick_marks = np.arange(len(classes))
+        ax.set_xticks(tick_marks)
+        ax.set_xticklabels(classes, rotation=45)
+        ax.set_yticks(tick_marks)
+        ax.set_yticklabels(classes)
 
-    fig, ax = plt.subplots(1, 1, figsize=(22, 22))
-    ax.imshow(cm, interpolation='nearest', cmap=cmap)
-    # plt.colorbar()
-    tick_marks = np.arange(len(classes))
-    ax.set_xticks(tick_marks)
-    ax.set_xticklabels(classes, rotation=45)
-    ax.set_yticks(tick_marks)
-    ax.set_yticklabels(classes)
+        fmt = '1.1f' if normalize else 'd'
+        thresh = cm.max() / 2.
+        for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+            ax.text(j, i, format(cm[i, j], fmt),
+                     horizontalalignment="center",
+                     color="white" if cm[i, j] > thresh else "black")
 
-    fmt = '1.1f' if normalize else 'd'
-    thresh = cm.max() / 2.
-    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        ax.text(j, i, format(cm[i, j], fmt),
-                 horizontalalignment="center",
-                 color="white" if cm[i, j] > thresh else "black")
+        fig.tight_layout()
+        ax.set_ylabel('True label')
+        ax.set_xlabel('Predicted label')
 
-    fig.tight_layout()
-    ax.set_ylabel('True label')
-    ax.set_xlabel('Predicted label')
+        _noisy = '_n' if opt.noiseAugment else ''
+        save_path = os.path.join(opt.save, 'split{}_cm_{}{}.png'.format(
+            split, cm_idx, _noisy))
 
-    _noisy = '_n' if opt.noiseAugment else ''
-    save_path = os.path.join(opt.save, 'split{}_cm{}.png'.format(split, _noisy))
-
-    if on_screen:
-        plt.show()
-    else:
-        plt.savefig(save_path, dpi=300)
-        plt.clf()
+        if on_screen:
+            plt.show()
+            plt.gcf().clear()
+        else:
+            plt.savefig(save_path, dpi=300)
+            plt.gcf().clear()
 
 
 def null_audio_activations(model):
@@ -405,14 +477,10 @@ def null_audio_activations(model):
 
 
 def main():
-    if len(sys.argv) > 1:
-        args = parse()
-    else:
-        args = fake_parse()
 
     for split in args.split:
         # Load data and model
-        model, opt = load_model(args.save, split)
+        model, opt = load_model(args.save, split, args)
         opt = change_opt_wrt_args(opt, args)
 
         # Plot training samples
@@ -430,77 +498,89 @@ def main():
                     sounds = chainer.cuda.to_cpu(x.data)
                     plot_CAM_visualizations(sounds, cams, lbls, split, opt, False)
                 except:
-                    print 'CAMS part failed for {}'.format(args.save)
+                    print('CAMS part failed for {}'.format(args.save))
 
         # Visualize learning
         log_path = os.path.join(opt.save, 'logger{}.txt'.format(split))
         plot_learning(log_path, split, opt)
 
 
-def main2():
+def main2(args):
     '''Evaluate localization
     '''
     import utils; reload(utils)
     import dataset; reload(dataset)
-    if len(sys.argv) > 1:
-        args = parse()
-    else:
-        args = fake_parse()
 
     # Iterate throw the learned models
-    a_metrics = []
+    dict_metrics = dict()
+    metric_names = 'ommission,insertion,acc,FN,TP,FP,TN'.split(',')
     for split in args.split:
         # Load data and model
-        model, opt = load_model(args.save, split)
-        zero_activations = null_audio_activations(model)
+        model, opt = load_model(args.save, split, args)
         zero_activations = None 
+        if args.use_zero_activations:
+            zero_activations = null_audio_activations(model)
         opt = change_opt_wrt_args(opt, args)
-        opt.noiseAugment = True
+        opt.noiseAugment = args.noiseAugment
         opt.batchSize = 16
         opt.inputTime = 2.5
         opt.longAudio = 8
 
         # Compute CAMs
         metrics = []
-        for _ in range(100):
-            val_batch = val_batch_gen(opt, split, remove_padding=False)
+        val_batch = val_batch_dataset(opt, split)
+        for _ in range(args.n_batch_eval):
             x, lbls = val_batch.next()
             y = model(x)
             
             cams = chainer.cuda.to_cpu(model.maps.data)
-            metrics.extend(evaluate_localisation(cams,
-                                                 lbls,
-                                                 act_thrld=7,
-                                                 act_window=7,
-                                                 min_act_per_window=3,
-                                                 zero_activations=None))
-        
-        a_metrics.extend(metrics)
-        ommission, insertion, acc, FN, TP, FP, TN, conf_matrix = map(np.array, zip(*metrics))
-        conf_matrix = conf_matrix.sum(axis=0)
-        print("ommission {}, insertion {}, acc {}, omm & ins {}, FN {}, TP {}, FP {}, TN {}",
-              ommission.mean(), insertion.mean(), acc.mean(),
-              (ommission + insertion).mean(),
-              FN.mean(), TP.mean(), FP.mean(), TN.mean())
+            metrics.extend(evaluate_localisation(cams, lbls,
+                                                 act_thrld=args.act_thrld,
+                                                 act_window=args.act_window,
+                                                 min_act_per_window=args.min_act_per_window,
+                                                 zero_activations=zero_activations,
+                                                 use_cm=args.store_cm))
 
-        c_names = get_class_names(opt, add_void=True)
-        c_names = [c_names[k] for k in sorted(c_names.keys())]
-        plot_confusion_matrix(conf_matrix, c_names, opt,
-                              split, normalize=True, on_screen=False)
+        metrics = map(np.array, zip(*metrics))
+        ommission, insertion, acc, FN, TP, FP, TN, conf_matrix = metrics
+        precision = TP.mean() / (TP.mean() + FP.mean())
+        rappel = TP.mean() / (TP.mean() + FN.mean())
+        with open(os.path.join(opt.save, 'results{}.txt'.format(split)), 'w+') as f:
+            f.write("ommission {}, insertion {}\nacc {}, omm & ins {}\nTP {}\tFN {}\nFP {}\tTN {}\nprecision {}\nrappel {}".format(
+                    ommission.mean(), insertion.mean(), acc.mean(),
+                    (ommission + insertion).mean(),
+                    TP.mean(), FN.mean(), FP.mean(), TN.mean(),
+                    precision, rappel))
+
+        if args.store_cm:
+            c_names = get_class_names(opt, add_void=True)
+            c_names = [c_names[k] for k in sorted(c_names.keys())]
+            conf_matrix = conf_matrix.sum(axis=0)
+            plot_confusion_matrix(conf_matrix, c_names, opt,
+                                  split, normalize=True, on_screen=False)
         sounds = chainer.cuda.to_cpu(x.data)
-        plot_CAM_visualizations(sounds,
-                                cams,
-                                lbls,
-                                split,
-                                opt,
-                                False,
-                                act_thrld=7,
-                                act_window=7,
-                                min_act_per_window=3,
-                                zero_activations=None)
+        plot_CAM_visualizations(sounds, cams, lbls, split, opt,
+                                on_screen=False,
+                                act_thrld=args.act_thrld,
+                                act_window=args.act_window,
+                                min_act_per_window=args.min_act_per_window,
+                                zero_activations=zero_activations)
+
+        # Record metrics values
+        for k, v in zip(metric_names, metrics): 
+            k = str(split) + '-' + k
+            dict_metrics[k] = v.mean()
+        plt.close('all')
+
+    return dict_metrics
 
 
 if __name__ == '__main__':
-    main2()
-    pass
+
+    if len(sys.argv) > 1:
+        args = parse()
+    else:
+        args = fake_parse()
+
+    main2(args)
 
