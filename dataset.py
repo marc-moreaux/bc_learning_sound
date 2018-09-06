@@ -113,7 +113,7 @@ class SoundDataset(chainer.dataset.DatasetMixin):
         return sound, label
 
 
-def setup(opt, split):
+def setup(opt, split, repeat=False):
     dataset = np.load(os.path.join(opt.data, opt.dataset, 'wav{}.npz'.format(opt.fs // 1000)))
 
     # Split to train and val
@@ -136,8 +136,8 @@ def setup(opt, split):
     val_data = SoundDataset(val_sounds, val_labels, opt, train=False)
     train_iter = chainer.iterators.MultiprocessIterator(train_data, opt.batchSize, repeat=False)
     if opt.longAudio > 0:
-        val_iter = chainer.iterators.SerialIterator(val_data, opt.batchSize, repeat=False, shuffle=False)
+        val_iter = chainer.iterators.SerialIterator(val_data, opt.batchSize, repeat=repeat, shuffle=False)
     else:
-        val_iter = chainer.iterators.SerialIterator(val_data, opt.batchSize // opt.nCrops, repeat=False, shuffle=False)
+        val_iter = chainer.iterators.SerialIterator(val_data, opt.batchSize // opt.nCrops, repeat=repeat, shuffle=False)
 
     return train_iter, val_iter
