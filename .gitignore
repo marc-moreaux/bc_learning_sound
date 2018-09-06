@@ -9,3 +9,6 @@ __pycache__/
 
 ### Results ###
 /results*
+
+### VIM ###
+*.swp
