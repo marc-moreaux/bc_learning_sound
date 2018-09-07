@@ -208,7 +208,7 @@ def val_batch_dataset(opt, split, remove_padding=False, n_samples=100):
 
     for i in range(n_samples):
         xs, lbls = val_dataset['data'][i]
-        xs = chainer.Variable(cuda.to_gpu(x_array[:, None, None, :]))
+        xs = chainer.Variable(cuda.to_gpu(xs[:, None, None, :]))
         yield xs, lbls
 
 
@@ -309,7 +309,7 @@ def evaluate_localisation(cams, lbls,
         accuracy = accuracy.mean() if len(accuracy) > 0 else 0
         conf_matrix = None
         if use_cm:
-            conf_matrix = confusion_matrix(gt, pred, range(-1,50))
+            conf_matrix = confusion_matrix(gt[::15], pred[::15], range(-1,50))
         metrics.append((ommission, insertion, accuracy, FN, TP, FP, TN, conf_matrix))
     
     return metrics
@@ -430,7 +430,8 @@ def plot_confusion_matrix(cm, classes, opt, split,
     """
     cms = [cm]
     if normalize:
-        cms = [ cm.astype('float') * 100 / cm.sum(axis=0)[:, np.newaxis],
+        cms = [ cm,
+                cm.astype('float') * 100 / cm.sum(axis=0)[:, np.newaxis],
                 cm.astype('float') * 100 / cm.sum(axis=1)[:, np.newaxis] ]
 
     for cm_idx, cm in enumerate(cms):
@@ -513,7 +514,7 @@ def main2(args):
 
     # Iterate throw the learned models
     dict_metrics = dict()
-    metric_names = 'ommission,insertion,acc,FN,TP,FP,TN'.split(',')
+    metric_names = 'ommission,insertion,acc,FN,TP,FP,TN,cm'.split(',')
     for split in args.split:
         # Load data and model
         model, opt = load_model(args.save, split, args)
@@ -552,10 +553,11 @@ def main2(args):
                     TP.mean(), FN.mean(), FP.mean(), TN.mean(),
                     precision, rappel))
 
+        
         if args.store_cm:
             c_names = get_class_names(opt, add_void=True)
             c_names = [c_names[k] for k in sorted(c_names.keys())]
-            conf_matrix = conf_matrix.sum(axis=0)
+            conf_matrix = conf_matrix.sum(axis=0)  # concatenate values
             plot_confusion_matrix(conf_matrix, c_names, opt,
                                   split, normalize=True, on_screen=False)
         sounds = chainer.cuda.to_cpu(x.data)
@@ -569,7 +571,7 @@ def main2(args):
         # Record metrics values
         for k, v in zip(metric_names, metrics): 
             k = str(split) + '-' + k
-            dict_metrics[k] = v.mean()
+            dict_metrics[k] = v.mean(axis=0)
         plt.close('all')
 
     return dict_metrics
