@@ -242,6 +242,8 @@ def shrinked_labels_for_loc(lbls, window_size=20570, window_step=3072):
 
 
 def scale_pred_at_fs(pred, lbl_len, window_size=20570, window_step=3072):
+    '''scales prediction vector to the size of ground truth vec
+    '''
     window_size = window_size - window_step + 1
     scaled_pred = np.zeros(lbl_len) - 1
     scaled_pred[:window_size/2 + window_step/2] = pred[0]
@@ -253,6 +255,12 @@ def scale_pred_at_fs(pred, lbl_len, window_size=20570, window_step=3072):
 
     return scaled_pred
 
+
+def scale_gt_at_pred(gt, window_size=20570, window_step=3072):
+    '''scales ground truth vector to pred vec
+    '''
+    gt = gt[window_size/2 : -window_size/2 + 3072 : 3072]
+    return gt
 
 def get_localisation_prediction(cam,
                                 act_thrld=30,
@@ -295,7 +303,10 @@ def evaluate_localisation(cams, lbls,
             act_window=act_window,
             min_act_per_window=min_act_per_window,
             zero_activations=zero_activations)
-        pred = scale_pred_at_fs(pred, len(gt))
+        #pred = scale_pred_at_fs(pred, len(gt))
+        gt = scale_gt_at_pred(gt)
+        gt = gt.astype(np.int8)
+        pred = pred.astype(np.int8)
 
         FN = (pred[gt != pred] == -1).sum() / float(len(pred))  # gt isn't met by pred
         TN = (gt[gt == pred] == -1).sum() / float(len(pred))  # gt and pred are negatives
@@ -309,8 +320,10 @@ def evaluate_localisation(cams, lbls,
         accuracy = accuracy.mean() if len(accuracy) > 0 else 0
         conf_matrix = None
         if use_cm:
-            conf_matrix = confusion_matrix(gt[::15], pred[::15], range(-1,50))
-        metrics.append((ommission, insertion, accuracy, FN, TP, FP, TN, conf_matrix))
+            conf_matrix = confusion_matrix(gt, pred, range(-1,50))
+            conf_matrix = conf_matrix.astype(np.float32)
+        metrics.append((ommission, insertion, accuracy,
+                        FN, TP, FP, TN, conf_matrix, gt, pred))
     
     return metrics
 
@@ -543,7 +556,7 @@ def main2(args):
                                                  use_cm=args.store_cm))
 
         metrics = map(np.array, zip(*metrics))
-        ommission, insertion, acc, FN, TP, FP, TN, conf_matrix = metrics
+        ommission, insertion, acc, FN, TP, FP, TN, conf_matrix, gt, pred = metrics
         precision = TP.mean() / (TP.mean() + FP.mean())
         rappel = TP.mean() / (TP.mean() + FN.mean())
         with open(os.path.join(opt.save, 'results{}.txt'.format(split)), 'w+') as f:
@@ -572,6 +585,9 @@ def main2(args):
         for k, v in zip(metric_names, metrics): 
             k = str(split) + '-' + k
             dict_metrics[k] = v.mean(axis=0)
+
+        dict_metrics[str(split) + '-gt'] = gt
+        dict_metrics[str(split) + '-pred'] = pred
         plt.close('all')
 
     return dict_metrics
