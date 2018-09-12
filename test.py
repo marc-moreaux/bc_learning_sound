@@ -131,7 +131,7 @@ def change_opt_wrt_args(opt, args):
 
 
 # Model and sample loading
-def load_model(save_path, split, args):
+def load_model(save_path, split):
     '''Load a model stored at <save_path> on split <split>
     '''
     # Load opt
@@ -145,9 +145,6 @@ def load_model(save_path, split, args):
         os.path.join(opt.save, 'model_split{}.npz'.format(split)), model)
     model.to_gpu()
   
-    opt.save = os.path.join(opt.save, args._str)
-    if not os.path.isdir(opt.save):
-        os.makedirs(opt.save)
     return model, opt
 
 
@@ -322,8 +319,10 @@ def evaluate_localisation(cams, lbls,
         if use_cm:
             conf_matrix = confusion_matrix(gt, pred, range(-1,50))
             conf_matrix = conf_matrix.astype(np.float32)
+        
+        cam = cam.astype(np.float32)
         metrics.append((ommission, insertion, accuracy,
-                        FN, TP, FP, TN, conf_matrix, gt, pred))
+                        FN, TP, FP, TN, conf_matrix, gt, pred, cams))
     
     return metrics
 
@@ -491,7 +490,6 @@ def null_audio_activations(model):
 
 
 def main():
-
     for split in args.split:
         # Load data and model
         model, opt = load_model(args.save, split, args)
@@ -519,78 +517,89 @@ def main():
         plot_learning(log_path, split, opt)
 
 
+def get_cams(args):
+    ''' Load or create a dictionnary with cams corresponding to model in args
+
+    returns a dictionnary with:
+        lbls
+        xs
+        cams
+        zero activation
+        opt
+    '''
+    xy_dict_path = os.path.join(args.save, 'cams.npz')
+    if os.path.isfile(xy_dict_path):
+        xy_dict = np.load(xy_dict_path)
+        return xy_dict
+
+    xy_dict = dict()
+    for split in args.split:
+        # Load data and model
+        model, opt = load_model(args.save, split)
+        zero_activations = null_audio_activations(model)
+        opt.batchSize = 16
+        opt.inputTime = 2.5
+        opt.longAudio = 8
+
+        # Initialize dict keys
+        xy_dict[str(split) + '-xs'] = []
+        xy_dict[str(split) + '-lbls'] = []
+        xy_dict[str(split) + '-cams'] = []
+        xy_dict[str(split) + '-xs-n'] = []
+        xy_dict[str(split) + '-cams-n'] = []
+        xy_dict[str(split) + '-zero_activations'] = zero_activations
+
+        # Compute CAMs without noise augment
+        opt.noiseAugment = False
+        val_batch = val_batch_dataset(opt, split)
+        for _ in range(args.n_batch_eval):
+            x, lbls = val_batch.next()
+            y = model(x)
+            cams = chainer.cuda.to_cpu(model.maps.data)
+            cams = cams.mean(axis=2)
+            lbls = lbls.astype(np.int8)
+            x = x.data.squeeze()
+            x = chainer.cuda.cupy.asnumpy(x)
+            x = (x * 128).astype(np.int8)
+            xy_dict[str(split) + '-xs'].append(x[:,::100])
+            xy_dict[str(split) + '-lbls'].append(lbls[:,::100])
+            xy_dict[str(split) + '-cams'].append(cams)
+    
+        # Compute CAMs with noise augment
+        opt.noiseAugment = True
+        val_batch = val_batch_dataset(opt, split)
+        for _ in range(args.n_batch_eval):
+            x, lbls = val_batch.next()
+            y = model(x)
+            cams = chainer.cuda.to_cpu(model.maps.data)
+            cams = cams.mean(axis=2).astype(np.float32)
+            lbls = lbls.astype(np.int8)
+            x = x.data.squeeze()
+            x = chainer.cuda.cupy.asnumpy(x)
+            x = (x * 128).astype(np.int8)
+            xy_dict[str(split) + '-xs-n'].append(x[:,::100])
+            xy_dict[str(split) + '-cams-n'].append(cams[:,::100])
+
+    for k, v in xy_dict.items():
+        if 'xs' in k or 'lbls' in k or 'cams' in k:
+            xy_dict[k] = np.concatenate(xy_dict[k])
+        else:
+            xy_dict[k] = np.array(xy_dict[k])
+
+    xy_dict['opt'] = opt
+
+    np.save(xy_dict_path, xy_dict)
+    return xy_dict
+
+
 def main2(args):
     '''Evaluate localization
     '''
     import utils; reload(utils)
     import dataset; reload(dataset)
 
-    # Iterate throw the learned models
-    dict_metrics = dict()
-    metric_names = 'ommission,insertion,acc,FN,TP,FP,TN,cm'.split(',')
-    for split in args.split:
-        # Load data and model
-        model, opt = load_model(args.save, split, args)
-        zero_activations = None 
-        if args.use_zero_activations:
-            zero_activations = null_audio_activations(model)
-        opt = change_opt_wrt_args(opt, args)
-        opt.noiseAugment = args.noiseAugment
-        opt.batchSize = 16
-        opt.inputTime = 2.5
-        opt.longAudio = 8
+    get_cams(args)
 
-        # Compute CAMs
-        metrics = []
-        val_batch = val_batch_dataset(opt, split)
-        for _ in range(args.n_batch_eval):
-            x, lbls = val_batch.next()
-            y = model(x)
-            
-            cams = chainer.cuda.to_cpu(model.maps.data)
-            metrics.extend(evaluate_localisation(cams, lbls,
-                                                 act_thrld=args.act_thrld,
-                                                 act_window=args.act_window,
-                                                 min_act_per_window=args.min_act_per_window,
-                                                 zero_activations=zero_activations,
-                                                 use_cm=args.store_cm))
-
-        metrics = map(np.array, zip(*metrics))
-        ommission, insertion, acc, FN, TP, FP, TN, conf_matrix, gt, pred = metrics
-        precision = TP.mean() / (TP.mean() + FP.mean())
-        rappel = TP.mean() / (TP.mean() + FN.mean())
-        with open(os.path.join(opt.save, 'results{}.txt'.format(split)), 'w+') as f:
-            f.write("ommission {}, insertion {}\nacc {}, omm & ins {}\nTP {}\tFN {}\nFP {}\tTN {}\nprecision {}\nrappel {}".format(
-                    ommission.mean(), insertion.mean(), acc.mean(),
-                    (ommission + insertion).mean(),
-                    TP.mean(), FN.mean(), FP.mean(), TN.mean(),
-                    precision, rappel))
-
-        
-        if args.store_cm:
-            c_names = get_class_names(opt, add_void=True)
-            c_names = [c_names[k] for k in sorted(c_names.keys())]
-            conf_matrix = conf_matrix.sum(axis=0)  # concatenate values
-            plot_confusion_matrix(conf_matrix, c_names, opt,
-                                  split, normalize=True, on_screen=False)
-        sounds = chainer.cuda.to_cpu(x.data)
-        plot_CAM_visualizations(sounds, cams, lbls, split, opt,
-                                on_screen=False,
-                                act_thrld=args.act_thrld,
-                                act_window=args.act_window,
-                                min_act_per_window=args.min_act_per_window,
-                                zero_activations=zero_activations)
-
-        # Record metrics values
-        for k, v in zip(metric_names, metrics): 
-            k = str(split) + '-' + k
-            dict_metrics[k] = v.mean(axis=0)
-
-        dict_metrics[str(split) + '-gt'] = gt
-        dict_metrics[str(split) + '-pred'] = pred
-        plt.close('all')
-
-    return dict_metrics
 
 
 if __name__ == '__main__':
