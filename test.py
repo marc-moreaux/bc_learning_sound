@@ -27,8 +27,8 @@ from sklearn.metrics import confusion_matrix
 def fake_parse():
     from argparse import Namespace
     args = Namespace(
-        save='./results/esc10_att_7b',
-        split=1,
+        save='./results/esc50_gap_7',
+        split=[1, 2, 3, 4, 5],
         noiseAugment=False,
         inputLength=0,
         act_thrld=4,
@@ -183,7 +183,9 @@ def val_batch_gen(opt, split, remove_padding=False, to_gpu=True):
 def val_batch_dataset(opt, split, remove_padding=False, n_samples=100):
     import cPickle as pkl
     import os
-    data_path = '/tmp/esc50-split' + str(split) + '-aug.npy'
+    data_path = os.path.join(opt.data, 
+                             opt.dataset, 
+                             'augmented-split{}.npy'.format(split))
 
     # Load dataset
     if not os.path.isfile(data_path):
@@ -258,6 +260,7 @@ def scale_gt_at_pred(gt, window_size=20570, window_step=3072):
     '''
     gt = gt[window_size/2 : -window_size/2 + 3072 : 3072]
     return gt
+
 
 def get_localisation_prediction(cam,
                                 act_thrld=30,
@@ -527,10 +530,10 @@ def get_cams(args):
         zero activation
         opt
     '''
-    xy_dict_path = os.path.join(args.save, 'cams.npz')
+    xy_dict_path = os.path.join(args.save, 'cams.npy')
     if os.path.isfile(xy_dict_path):
         xy_dict = np.load(xy_dict_path)
-        return xy_dict
+        return xy_dict[()]
 
     xy_dict = dict()
     for split in args.split:
@@ -544,6 +547,7 @@ def get_cams(args):
         # Initialize dict keys
         xy_dict[str(split) + '-xs'] = []
         xy_dict[str(split) + '-lbls'] = []
+        xy_dict[str(split) + '-lbls2'] = []
         xy_dict[str(split) + '-cams'] = []
         xy_dict[str(split) + '-xs-n'] = []
         xy_dict[str(split) + '-cams-n'] = []
@@ -561,10 +565,12 @@ def get_cams(args):
             x = x.data.squeeze()
             x = chainer.cuda.cupy.asnumpy(x)
             x = (x * 128).astype(np.int8)
-            xy_dict[str(split) + '-xs'].append(x[:,::100])
-            xy_dict[str(split) + '-lbls'].append(lbls[:,::100])
+            xy_dict[str(split) + '-xs'].append(x[:, ::100])
+            xy_dict[str(split) + '-lbls'].append(lbls[:, ::100])
+            xy_dict[str(split) + '-lbls2'].append(lbls[:,10285:-7285:3072])
             xy_dict[str(split) + '-cams'].append(cams)
     
+        # 20570, w=3072
         # Compute CAMs with noise augment
         opt.noiseAugment = True
         val_batch = val_batch_dataset(opt, split)
@@ -578,8 +584,9 @@ def get_cams(args):
             x = chainer.cuda.cupy.asnumpy(x)
             x = (x * 128).astype(np.int8)
             xy_dict[str(split) + '-xs-n'].append(x[:,::100])
-            xy_dict[str(split) + '-cams-n'].append(cams[:,::100])
+            xy_dict[str(split) + '-cams-n'].append(cams)
 
+    # Make np.arrays
     for k, v in xy_dict.items():
         if 'xs' in k or 'lbls' in k or 'cams' in k:
             xy_dict[k] = np.concatenate(xy_dict[k])
@@ -588,8 +595,13 @@ def get_cams(args):
 
     xy_dict['opt'] = opt
 
+    # Return dict with Xs, labels and Cams
     np.save(xy_dict_path, xy_dict)
     return xy_dict
+
+
+def roc_curve_from_cam():
+    pass
 
 
 def main2(args):
@@ -597,9 +609,32 @@ def main2(args):
     '''
     import utils; reload(utils)
     import dataset; reload(dataset)
+    from sklearn.metrics import roc_curve, auc
+    
+    xy_dict = get_cams(args)
+    import IPython; IPython.embed()
 
-    get_cams(args)
+    y = xy_dict['1-lbls2'].ravel()
+    pred = np.array([xy_dict['1-cams'][:,i].ravel() for i in range(50)])
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+    for i in range(n_classes):
+        fpr[i], tpr[i], _ = roc_curve(y == i, pred[i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
 
+    y_test = np.array([xy_dict['1-lbls2'].ravel() == i for i in range(n_classes)])
+    y_score = np.array([xy_dict['1-cams'][:,i].ravel() for i in range(50)])
+
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+    for i in range(n_classes):
+        fpr[i], tpr[i], _ = roc_curve(y_test[i], pred[i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
+
+    fpr["micro"], tpr["micro"], _ = roc_curve(y_test.ravel(), pred.ravel())
+    roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
 
 
 if __name__ == '__main__':
