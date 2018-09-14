@@ -7,6 +7,7 @@
 import sys
 import os
 import chainer
+from os.path import join
 
 import opts
 import models
@@ -24,7 +25,9 @@ def main():
 
 
 def train(opt, split):
-    model = getattr(models, opt.netType)(opt.nClasses, GAP=opt.GAP, bypass=opt.bypass)
+    model = getattr(models, opt.netType)(opt.nClasses,
+                                         GAP=opt.GAP,
+                                         bypass=opt.bypass)
     model.to_gpu()
     optimizer = chainer.optimizers.NesterovAG(lr=opt.LR, momentum=opt.momentum)
     optimizer.setup(model)
@@ -34,8 +37,9 @@ def train(opt, split):
     log = {'train_acc': [], 'val_acc': [], 'lr': [], 'train_loss': []}
 
     if opt.testOnly:
-        chainer.serializers.load_npz(
-            os.path.join(opt.save, 'model_split{}.npz'.format(split)), trainer.model)
+        chainer.serializers.load_npz(join(opt.save,
+                                          'model_split{}.npz'.format(split)),
+                                     trainer.model)
         val_top1 = trainer.val()
         print('| Val: top1 {:.2f}'.format(val_top1))
         return
@@ -45,8 +49,10 @@ def train(opt, split):
         val_top1 = trainer.val()
         sys.stderr.write('\r\033[K')
         sys.stdout.write(
-            '| Epoch: {}/{} | Train: LR {}  Loss {:.3f}  top1 {:.2f} | Val: top1 {:.2f}\n'.format(
-                epoch, opt.nEpochs, trainer.optimizer.lr, train_loss, train_top1, val_top1))
+            '| Epoch: {}/{} | Train: LR {}  Loss {:.3f}  top1 {:.2f} |'
+            'Val: top1 {:.2f}\n'.format(epoch, opt.nEpochs,
+                                        trainer.optimizer.lr, train_loss,
+                                        train_top1, val_top1))
         sys.stdout.flush()
         log['lr'].append(trainer.optimizer.lr)
         log['train_loss'].append(train_loss)
@@ -57,13 +63,13 @@ def train(opt, split):
     if opt.save != 'None':
         # Save weights
         chainer.serializers.save_npz(
-            os.path.join(opt.save, 'model_split{}.npz'.format(split)), model)
+            join(opt.save, 'model_split{}.npz'.format(split)), model)
         # Save logs
-        with open(os.path.join(opt.save, 'logger{}.txt'.format(split)), "w") as f:
+        with open(join(opt.save, 'logger{}.txt'.format(split)), "w") as f:
             for k, v in log.items():
                 f.write(str(k) + ': ' + str(v) + '\n')
         # Save parameters
-        with open(os.path.join(opt.save, 'opt{}.pkl'.format(split)), "wb") as f:
+        with open(join(opt.save, 'opt{}.pkl'.format(split)), "wb") as f:
             pickle.dump(opt, f)
 
 
