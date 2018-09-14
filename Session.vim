@@ -12,7 +12,6 @@ map <NL> j
 map  k
 map  l
 nnoremap  :bnext
-nmap  o
 nnoremap  :bprevious
 map <super>pd oimport IPython; IPython.embed()
 map <super>p iimport IPython; IPython.embed()
@@ -45,8 +44,10 @@ xmap \cc <Plug>NERDCommenterComment
 nmap \cc <Plug>NERDCommenterComment
 vmap gx <Plug>NetrwBrowseXVis
 nmap gx <Plug>NetrwBrowseX
+nnoremap <F8> :w :!~/.virtualenvs/bc_learning_sound-I6BKBd4y/bin/python test.py
 nnoremap <SNR>125_: :=v:count ? v:count : ''
-map <F8> :w :!python keras_test.py
+vmap <F8> :w :!python keras_test.py
+omap <F8> :w :!python keras_test.py
 nnoremap <SNR>96_: :=v:count ? v:count : ''
 vnoremap <silent> <Plug>NetrwBrowseXVis :call netrw#BrowseXVis()
 nnoremap <silent> <Plug>NetrwBrowseX :call netrw#BrowseX(expand((exists("g:netrw_gx")? g:netrw_gx : '<cfile>')),netrw#CheckIfRemote())
@@ -101,6 +102,7 @@ set suffixes=.bak,~,.swp,.o,.info,.aux,.log,.dvi,.bbl,.blg,.brf,.cb,.ind,.idx,.i
 set tabline=%!py3eval('powerline.tabline()')
 set tabstop=4
 set wildignore=*.pyc
+set window=61
 let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0
 let v:this_session=expand("<sfile>:p")
 silent only
@@ -121,10 +123,13 @@ badd +1 train.sh
 badd +1 train2.sh
 badd +6 dataset_gen/viz_esc50.py
 badd +1 main.py
-badd +1 test.py
+badd +590 test.py
 badd +1 compute_viz.sh
 badd +3 test.sh
 badd +0 opts.py
+badd +14 .gitignore
+badd +93 ~/.vimrc
+badd +33 test2.py
 argglobal
 silent! argdel *
 $argadd ./
@@ -148,9 +153,9 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 24 + 131) / 263)
-exe 'vert 2resize ' . ((&columns * 119 + 131) / 263)
-exe 'vert 3resize ' . ((&columns * 118 + 131) / 263)
+exe 'vert 1resize ' . ((&columns * 24 + 102) / 204)
+exe 'vert 2resize ' . ((&columns * 119 + 102) / 204)
+exe 'vert 3resize ' . ((&columns * 118 + 102) / 204)
 argglobal
 enew
 file NERD_tree_2
@@ -577,9 +582,9 @@ normal! zt
 45
 normal! 013|
 wincmd w
-exe 'vert 1resize ' . ((&columns * 24 + 131) / 263)
-exe 'vert 2resize ' . ((&columns * 119 + 131) / 263)
-exe 'vert 3resize ' . ((&columns * 118 + 131) / 263)
+exe 'vert 1resize ' . ((&columns * 24 + 102) / 204)
+exe 'vert 2resize ' . ((&columns * 119 + 102) / 204)
+exe 'vert 3resize ' . ((&columns * 118 + 102) / 204)
 tabnext
 edit main.py
 set splitbelow splitright
@@ -597,11 +602,11 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 136 + 131) / 263)
-exe '2resize ' . ((&lines * 37 + 37) / 75)
-exe 'vert 2resize ' . ((&columns * 126 + 131) / 263)
-exe '3resize ' . ((&lines * 34 + 37) / 75)
-exe 'vert 3resize ' . ((&columns * 126 + 131) / 263)
+exe 'vert 1resize ' . ((&columns * 102 + 102) / 204)
+exe '2resize ' . ((&lines * 29 + 31) / 62)
+exe 'vert 2resize ' . ((&columns * 101 + 102) / 204)
+exe '3resize ' . ((&lines * 29 + 31) / 62)
+exe 'vert 3resize ' . ((&columns * 101 + 102) / 204)
 argglobal
 let s:cpo_save=&cpo
 set cpo&vim
@@ -726,12 +731,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 58 - ((57 * winheight(0) + 36) / 72)
+let s:l = 55 - ((33 * winheight(0) + 29) / 59)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-58
-normal! 0
+55
+normal! 052|
 wincmd w
 argglobal
 if bufexists('train2.sh') | buffer train2.sh | else | edit train2.sh | endif
@@ -853,15 +858,15 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 3 - ((2 * winheight(0) + 18) / 37)
+let s:l = 4 - ((1 * winheight(0) + 14) / 29)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-3
+4
 normal! 0
 wincmd w
 argglobal
-terminal ++curwin ++cols=126 ++rows=34 
+terminal ++curwin ++cols=101 ++rows=29 
 setlocal keymap=
 setlocal noarabic
 setlocal noautoindent
@@ -979,18 +984,18 @@ setlocal nowinfixheight
 setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
-let s:l = 1 - ((0 * winheight(0) + 17) / 34)
+let s:l = 1 - ((0 * winheight(0) + 14) / 29)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 1
 normal! 0
 wincmd w
-exe 'vert 1resize ' . ((&columns * 136 + 131) / 263)
-exe '2resize ' . ((&lines * 37 + 37) / 75)
-exe 'vert 2resize ' . ((&columns * 126 + 131) / 263)
-exe '3resize ' . ((&lines * 34 + 37) / 75)
-exe 'vert 3resize ' . ((&columns * 126 + 131) / 263)
+exe 'vert 1resize ' . ((&columns * 102 + 102) / 204)
+exe '2resize ' . ((&lines * 29 + 31) / 62)
+exe 'vert 2resize ' . ((&columns * 101 + 102) / 204)
+exe '3resize ' . ((&lines * 29 + 31) / 62)
+exe 'vert 3resize ' . ((&columns * 101 + 102) / 204)
 tabnext
 edit test.py
 set splitbelow splitright
@@ -1012,14 +1017,14 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe '1resize ' . ((&lines * 68 + 37) / 75)
-exe 'vert 1resize ' . ((&columns * 131 + 131) / 263)
-exe '2resize ' . ((&lines * 3 + 37) / 75)
-exe 'vert 2resize ' . ((&columns * 131 + 131) / 263)
-exe '3resize ' . ((&lines * 36 + 37) / 75)
-exe 'vert 3resize ' . ((&columns * 131 + 131) / 263)
-exe '4resize ' . ((&lines * 35 + 37) / 75)
-exe 'vert 4resize ' . ((&columns * 131 + 131) / 263)
+exe '1resize ' . ((&lines * 46 + 31) / 62)
+exe 'vert 1resize ' . ((&columns * 102 + 102) / 204)
+exe '2resize ' . ((&lines * 12 + 31) / 62)
+exe 'vert 2resize ' . ((&columns * 102 + 102) / 204)
+exe '3resize ' . ((&lines * 29 + 31) / 62)
+exe 'vert 3resize ' . ((&columns * 101 + 102) / 204)
+exe '4resize ' . ((&lines * 29 + 31) / 62)
+exe 'vert 4resize ' . ((&columns * 101 + 102) / 204)
 argglobal
 let s:cpo_save=&cpo
 set cpo&vim
@@ -1067,9 +1072,10 @@ setlocal foldcolumn=0
 setlocal foldenable
 setlocal foldexpr=0
 setlocal foldignore=#
-setlocal foldlevel=0
+setlocal foldlevel=10
 setlocal foldmarker={{{,}}}
-setlocal foldmethod=manual
+set foldmethod=indent
+setlocal foldmethod=indent
 setlocal foldminlines=1
 setlocal foldnestmax=20
 setlocal foldtext=foldtext()
@@ -1122,7 +1128,7 @@ setlocal spellfile=
 setlocal spelllang=en
 setlocal statusline=%!py3eval('powerline.statusline(1)')
 setlocal suffixesadd=.py
-setlocal swapfile
+setlocal noswapfile
 setlocal synmaxcol=3000
 if &syntax != 'python'
 setlocal syntax=python
@@ -1143,13 +1149,32 @@ setlocal nowinfixheight
 setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
-silent! normal! zE
-let s:l = 437 - ((67 * winheight(0) + 34) / 68)
+524
+normal! zo
+540
+normal! zo
+604
+normal! zo
+643
+normal! zo
+643
+normal! zo
+648
+normal! zo
+648
+normal! zo
+653
+normal! zo
+654
+normal! zo
+683
+normal! zo
+let s:l = 629 - ((9 * winheight(0) + 23) / 46)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-437
-normal! 0
+629
+normal! 037|
 wincmd w
 argglobal
 enew
@@ -1196,7 +1221,8 @@ setlocal foldexpr=0
 setlocal foldignore=#
 setlocal foldlevel=0
 setlocal foldmarker={{{,}}}
-setlocal foldmethod=manual
+set foldmethod=indent
+setlocal foldmethod=indent
 setlocal foldminlines=1
 setlocal foldnestmax=20
 setlocal foldtext=foldtext()
@@ -1247,7 +1273,7 @@ setlocal nospell
 setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
 setlocal spellfile=
 setlocal spelllang=en
-setlocal statusline=%!py3eval('powerline.statusline(14)')
+setlocal statusline=%!py3eval('powerline.statusline(28)')
 setlocal suffixesadd=
 setlocal noswapfile
 setlocal synmaxcol=3000
@@ -1391,15 +1417,15 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 18) / 36)
+let s:l = 2 - ((1 * winheight(0) + 14) / 29)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
-normal! 094|
+2
+normal! 0
 wincmd w
 argglobal
-terminal ++curwin ++cols=131 ++rows=35 
+terminal ++curwin ++cols=101 ++rows=29 
 setlocal keymap=
 setlocal noarabic
 setlocal noautoindent
@@ -1517,21 +1543,21 @@ setlocal nowinfixheight
 setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
-let s:l = 1 - ((0 * winheight(0) + 17) / 35)
+let s:l = 1 - ((0 * winheight(0) + 14) / 29)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 1
 normal! 0
 wincmd w
-exe '1resize ' . ((&lines * 68 + 37) / 75)
-exe 'vert 1resize ' . ((&columns * 131 + 131) / 263)
-exe '2resize ' . ((&lines * 3 + 37) / 75)
-exe 'vert 2resize ' . ((&columns * 131 + 131) / 263)
-exe '3resize ' . ((&lines * 36 + 37) / 75)
-exe 'vert 3resize ' . ((&columns * 131 + 131) / 263)
-exe '4resize ' . ((&lines * 35 + 37) / 75)
-exe 'vert 4resize ' . ((&columns * 131 + 131) / 263)
+exe '1resize ' . ((&lines * 46 + 31) / 62)
+exe 'vert 1resize ' . ((&columns * 102 + 102) / 204)
+exe '2resize ' . ((&lines * 12 + 31) / 62)
+exe 'vert 2resize ' . ((&columns * 102 + 102) / 204)
+exe '3resize ' . ((&lines * 29 + 31) / 62)
+exe 'vert 3resize ' . ((&columns * 101 + 102) / 204)
+exe '4resize ' . ((&lines * 29 + 31) / 62)
+exe 'vert 4resize ' . ((&columns * 101 + 102) / 204)
 tabnext
 edit dataset.py
 set splitbelow splitright
@@ -1545,8 +1571,8 @@ set winminheight=0
 set winheight=1
 set winminwidth=0
 set winwidth=1
-exe 'vert 1resize ' . ((&columns * 131 + 131) / 263)
-exe 'vert 2resize ' . ((&columns * 131 + 131) / 263)
+exe 'vert 1resize ' . ((&columns * 102 + 102) / 204)
+exe 'vert 2resize ' . ((&columns * 101 + 102) / 204)
 argglobal
 let s:cpo_save=&cpo
 set cpo&vim
@@ -1671,12 +1697,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 117 - ((45 * winheight(0) + 36) / 72)
+let s:l = 128 - ((44 * winheight(0) + 29) / 59)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-117
-normal! 073|
+128
+normal! 05|
 wincmd w
 argglobal
 if bufexists('opts.py') | buffer opts.py | else | edit opts.py | endif
@@ -1803,15 +1829,15 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 13 - ((12 * winheight(0) + 36) / 72)
+let s:l = 9 - ((8 * winheight(0) + 29) / 59)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-13
-normal! 0
+9
+normal! 028|
 wincmd w
-exe 'vert 1resize ' . ((&columns * 131 + 131) / 263)
-exe 'vert 2resize ' . ((&columns * 131 + 131) / 263)
+exe 'vert 1resize ' . ((&columns * 102 + 102) / 204)
+exe 'vert 2resize ' . ((&columns * 101 + 102) / 204)
 tabnext 3
 set stal=1
 if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0
