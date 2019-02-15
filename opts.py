@@ -6,7 +6,7 @@ def parse():
     parser = argparse.ArgumentParser(description='BC learning for sounds')
 
     # General settings
-    parser.add_argument('--dataset', required=True, choices=['esc10', 'esc50', 'urbansound8k'])
+    parser.add_argument('--dataset', required=True, choices=['esc10', 'esc50', 'urbansound8k', 'epicKitchen'])
     parser.add_argument('--netType', required=True, choices=['envnet', 'envnetv2', 'stridenet'])
     parser.add_argument('--data', required=True, help='Path to dataset')
     parser.add_argument('--split', type=int, default=-1, help='esc: 1-5, urbansound: 1-10 (-1: run on all splits)')
@@ -43,9 +43,12 @@ def parse():
     elif opt.dataset == 'esc10':
         opt.nClasses = 10
         opt.nFolds = 5
-    else:  # urbansound8k
+    elif opt.dataset == 'urbansound8k':
         opt.nClasses = 10
         opt.nFolds = 10
+    else : # epicKitchen
+        opt.nClasses = 19
+        opt.nFolds = 5
 
     if opt.split == -1:
         opt.splits = range(1, opt.nFolds + 1)
@@ -82,6 +85,11 @@ def parse():
         'envnet': {'nEpochs': 400, 'LR': 0.01, 'schedule': [0.5, 0.75], 'warmup': 0},
         'envnetv2': {'nEpochs': 600, 'LR': 0.1, 'schedule': [0.3, 0.6, 0.9], 'warmup': 10},
         'stridenet': {'nEpochs': 600, 'LR': 0.1, 'schedule': [0.3, 0.6, 0.9], 'warmup': 10},
+    }
+    default_settings['epicKitchen'] = {
+        'envnet': {'nEpochs': 600, 'LR': 0.01, 'schedule': [0.5, 0.75], 'warmup': 0},
+        'envnetv2': {'nEpochs': 1000, 'LR': 0.1, 'schedule': [0.3, 0.6, 0.9], 'warmup': 10},
+        'stridenet': {'nEpochs': 1000, 'LR': 0.1, 'schedule': [0.3, 0.6, 0.9], 'warmup': 10},
     }
     for key in ['nEpochs', 'LR', 'schedule', 'warmup']:
         if eval('opt.{}'.format(key)) == -1:
