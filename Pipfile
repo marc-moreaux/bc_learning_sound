@@ -1,0 +1,23 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[dev-packages]
+
+[packages]
+keras = "*"
+tensorflow-gpu = "*"
+numpy = "==1.13.3"
+six = "==1.9.0"
+chainer = "==1.24"
+cupy = "==1.0.2"
+matplotlib = "*"
+pandas = "*"
+sklearn = "*"
+pudb = "*"
+ipykernel = "*"
+guppy = "*"
+
+[requires]
+python_version = "2.7"

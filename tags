@@ -1,0 +1,239 @@
+	Session.vim	/^map  h$/;"	m
+		Session.vim	/^inoremap <expr> 	 pumvisible() ? "\\" : "\\	"$/;"	m
+	Session.vim	/^map  k$/;"	m
+	Session.vim	/^nnoremap <buffer> <silent>  :call nerdtree#ui_glue#invokeKeyMap("<C-k>")$/;"	m
+	Session.vim	/^map  l$/;"	m
+	Session.vim	/^nnoremap <buffer> <silent> $/;"	m
+	Session.vim	/^nnoremap  :bnext$/;"	m
+	Session.vim	/^nmap  o$/;"	m
+	Session.vim	/^nnoremap  :bprevious$/;"	m
+<	Session.vim	/^vnoremap < <gv$/;"	m
+<super>d	Session.vim	/^map <super>d oimport IPython; IPython.embed()$/;"	m
+<super>p	Session.vim	/^map <super>p Oimport IPython; IPython.embed()$/;"	m
+<super>pd	Session.vim	/^map <super>pd oimport IPython; IPython.embed()$/;"	m
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+0	Session.vim	/^normal! 0$/;"	m
+012|	Session.vim	/^normal! 012|$/;"	m
+013|	Session.vim	/^normal! 013|$/;"	m
+0162|	Session.vim	/^normal! 0162|$/;"	m
+05|	Session.vim	/^normal! 05|$/;"	m
+09|	Session.vim	/^normal! 09|$/;"	m
+<2-LeftMouse>	Session.vim	/^nnoremap <buffer> <silent> <2-LeftMouse> :call nerdtree#ui_glue#invokeKeyMap("<2-LeftMouse>")$/;"	m
+<Down>	Session.vim	/^inoremap <expr> <Down> pumvisible() ? "\\" : "\\<Down>"$/;"	m
+<F7>	Session.vim	/^noremap <buffer> <F7> :call flake8#Flake8()$/;"	m
+<F8>	Session.vim	/^map <F8> :w$/;"	m
+<LeftRelease>	Session.vim	/^nnoremap <buffer> <silent> <LeftRelease> <LeftRelease>:call nerdtree#ui_glue#invokeKeyMap("<LeftRelease>")$/;"	m
+<MiddleMouse>	Session.vim	/^nnoremap <buffer> <silent> <MiddleMouse> :call nerdtree#ui_glue#invokeKeyMap("<MiddleMouse>")$/;"	m
+<NL>	Session.vim	/^map <NL> j$/;"	m
+<NL>	Session.vim	/^nnoremap <buffer> <silent> <NL> :call nerdtree#ui_glue#invokeKeyMap("<C-j>")$/;"	m
+<Nul>	Session.vim	/^imap <Nul> <C-Space>$/;"	m
+<Plug>(startify-open-buffers)	Session.vim	/^nnoremap <silent> <Plug>(startify-open-buffers) :call startify#open_buffers()$/;"	m
+<Plug>NERDCommenterAlignBoth	Session.vim	/^nnoremap <silent> <Plug>NERDCommenterAlignBoth :call NERDComment("n", "AlignBoth")$/;"	m
+<Plug>NERDCommenterAlignLeft	Session.vim	/^nnoremap <silent> <Plug>NERDCommenterAlignLeft :call NERDComment("n", "AlignLeft")$/;"	m
+<Plug>NERDCommenterAppend	Session.vim	/^nnoremap <silent> <Plug>NERDCommenterAppend :call NERDComment("n", "Append")$/;"	m
+<Plug>NERDCommenterComment	Session.vim	/^nnoremap <silent> <Plug>NERDCommenterComment :call NERDComment("n", "Comment")$/;"	m
+<Plug>NERDCommenterInsert	Session.vim	/^inoremap <silent> <Plug>NERDCommenterInsert  <BS>:call NERDComment('i', "insert")$/;"	m
+<Plug>NERDCommenterInvert	Session.vim	/^nnoremap <silent> <Plug>NERDCommenterInvert :call NERDComment("n", "Invert")$/;"	m
+<Plug>NERDCommenterMinimal	Session.vim	/^nnoremap <silent> <Plug>NERDCommenterMinimal :call NERDComment("n", "Minimal")$/;"	m
+<Plug>NERDCommenterNested	Session.vim	/^nnoremap <silent> <Plug>NERDCommenterNested :call NERDComment("n", "Nested")$/;"	m
+<Plug>NERDCommenterSexy	Session.vim	/^nnoremap <silent> <Plug>NERDCommenterSexy :call NERDComment("n", "Sexy")$/;"	m
+<Plug>NERDCommenterToEOL	Session.vim	/^nnoremap <silent> <Plug>NERDCommenterToEOL :call NERDComment("n", "ToEOL")$/;"	m
+<Plug>NERDCommenterToggle	Session.vim	/^nnoremap <silent> <Plug>NERDCommenterToggle :call NERDComment("n", "Toggle")$/;"	m
+<Plug>NERDCommenterUncomment	Session.vim	/^nnoremap <silent> <Plug>NERDCommenterUncomment :call NERDComment("n", "Uncomment")$/;"	m
+<Plug>NERDCommenterYank	Session.vim	/^nnoremap <silent> <Plug>NERDCommenterYank :call NERDComment("n", "Yank")$/;"	m
+<Plug>NetrwBrowseX	Session.vim	/^nnoremap <silent> <Plug>NetrwBrowseX :call netrw#BrowseX(expand((exists("g:netrw_gx")? g:netrw_gx : '<cfile>')),netrw#CheckIfRemote())$/;"	m
+<Plug>NetrwBrowseXVis	Session.vim	/^vnoremap <silent> <Plug>NetrwBrowseXVis :call netrw#BrowseXVis()$/;"	m
+<S-Tab>	Session.vim	/^inoremap <expr> <S-Tab> pumvisible() ? "\\" : "\\<S-Tab>"$/;"	m
+<SNR>125_:	Session.vim	/^nnoremap <SNR>125_: :=v:count ? v:count : ''$/;"	m
+<SNR>96_:	Session.vim	/^nnoremap <SNR>96_: :=v:count ? v:count : ''$/;"	m
+<Up>	Session.vim	/^inoremap <expr> <Up> pumvisible() ? "\\" : "\\<Up>"$/;"	m
+>	Session.vim	/^vnoremap > >gv$/;"	m
+?	Session.vim	/^nnoremap <buffer> <silent> ? :call nerdtree#ui_glue#invokeKeyMap("?")$/;"	m
+A	Session.vim	/^nnoremap <buffer> <silent> A :call nerdtree#ui_glue#invokeKeyMap("A")$/;"	m
+B	Session.vim	/^nnoremap <buffer> <silent> B :call nerdtree#ui_glue#invokeKeyMap("B")$/;"	m
+C	Session.vim	/^nnoremap <buffer> <silent> C :call nerdtree#ui_glue#invokeKeyMap("C")$/;"	m
+CD	Session.vim	/^nnoremap <buffer> <silent> CD :call nerdtree#ui_glue#invokeKeyMap("CD")$/;"	m
+ConvBN	models/convbnrelu.py	/^class ConvBN(chainer.Chain):$/;"	c
+ConvBNReLU	models/convbnrelu.py	/^class ConvBNReLU(chainer.Chain):$/;"	c
+ConvBNSig	models/convbnrelu.py	/^class ConvBNSig(chainer.Chain):$/;"	c
+D	Session.vim	/^nnoremap <buffer> <silent> D :call nerdtree#ui_glue#invokeKeyMap("D")$/;"	m
+DATASET_PATH	dataset_gen/viz_esc50.py	/^DATASET_PATH = '\/home\/moreaux-gpu\/Dataset\/ENVNET_DB\/esc10\/wav16.npz'$/;"	v
+Dataset	dataset2.py	/^Dataset = tf.data.Dataset $/;"	v
+EnvNet	models/envnet.py	/^class EnvNet(chainer.Chain):$/;"	c
+EnvNetv2	models/envnetv2.py	/^class EnvNetv2(chainer.Chain):$/;"	c
+F	Session.vim	/^nnoremap <buffer> <silent> F :call nerdtree#ui_glue#invokeKeyMap("F")$/;"	m
+I	Session.vim	/^nnoremap <buffer> <silent> I :call nerdtree#ui_glue#invokeKeyMap("I")$/;"	m
+Iterator	dataset2.py	/^Iterator = tf.data.Iterator$/;"	v
+J	Session.vim	/^nnoremap <buffer> <silent> J :call nerdtree#ui_glue#invokeKeyMap("J")$/;"	m
+K	Session.vim	/^nnoremap <buffer> <silent> K :call nerdtree#ui_glue#invokeKeyMap("K")$/;"	m
+O	Session.vim	/^nnoremap <buffer> <silent> O :call nerdtree#ui_glue#invokeKeyMap("O")$/;"	m
+P	Session.vim	/^nnoremap <buffer> <silent> P :call nerdtree#ui_glue#invokeKeyMap("P")$/;"	m
+R	Session.vim	/^nnoremap <buffer> <silent> R :call nerdtree#ui_glue#invokeKeyMap("R")$/;"	m
+ResConvBNReLU	models/stridenet.py	/^class ResConvBNReLU(chainer.Chain):$/;"	c
+SessionLoad	Session.vim	/^let SessionLoad = 1$/;"	v
+SoundDataset	dataset.py	/^class SoundDataset(chainer.dataset.DatasetMixin):$/;"	c
+StrideNet	models/stridenet.py	/^class StrideNet(chainer.Chain):$/;"	c
+T	Session.vim	/^nnoremap <buffer> <silent> T :call nerdtree#ui_glue#invokeKeyMap("T")$/;"	m
+Trainer	train.py	/^class Trainer:$/;"	c
+U	Session.vim	/^nnoremap <buffer> <silent> U :call nerdtree#ui_glue#invokeKeyMap("U")$/;"	m
+U	dataset2.py	/^U = utils$/;"	v
+X	Session.vim	/^nnoremap <buffer> <silent> X :call nerdtree#ui_glue#invokeKeyMap("X")$/;"	m
+\c	Session.vim	/^nmap \\c  <Plug>NERDCommenterToggle$/;"	m
+\c$	Session.vim	/^nmap \\c$ <Plug>NERDCommenterToEOL$/;"	m
+\cA	Session.vim	/^nmap \\cA <Plug>NERDCommenterAppend$/;"	m
+\ca	Session.vim	/^nmap \\ca <Plug>NERDCommenterAltDelims$/;"	m
+\cb	Session.vim	/^nmap \\cb <Plug>NERDCommenterAlignBoth$/;"	m
+\cc	Session.vim	/^nmap \\cc <Plug>NERDCommenterComment$/;"	m
+\ci	Session.vim	/^nmap \\ci <Plug>NERDCommenterInvert$/;"	m
+\cl	Session.vim	/^nmap \\cl <Plug>NERDCommenterAlignLeft$/;"	m
+\cm	Session.vim	/^nmap \\cm <Plug>NERDCommenterMinimal$/;"	m
+\cn	Session.vim	/^nmap \\cn <Plug>NERDCommenterNested$/;"	m
+\cs	Session.vim	/^nmap \\cs <Plug>NERDCommenterSexy$/;"	m
+\cu	Session.vim	/^nmap \\cu <Plug>NERDCommenterUncomment$/;"	m
+\cy	Session.vim	/^nmap \\cy <Plug>NERDCommenterYank$/;"	m
+\d	Session.vim	/^nnoremap \\d :YcmShowDetailedDiagnostic$/;"	m
+__call__	models/convbnrelu.py	/^    def __call__(self, x, train):$/;"	m	class:ConvBN	file:
+__call__	models/convbnrelu.py	/^    def __call__(self, x, train):$/;"	m	class:ConvBNReLU	file:
+__call__	models/convbnrelu.py	/^    def __call__(self, x, train):$/;"	m	class:ConvBNSig	file:
+__call__	models/envnet.py	/^    def __call__(self, x):$/;"	m	class:EnvNet	file:
+__call__	models/envnetv2.py	/^    def __call__(self, x):$/;"	m	class:EnvNetv2	file:
+__call__	models/stridenet.py	/^    def __call__(self, x):$/;"	m	class:StrideNet	file:
+__call__	models/stridenet.py	/^    def __call__(self, x, train):$/;"	m	class:ResConvBNReLU	file:
+__init__	dataset.py	/^    def __init__(self, sounds, labels, opt, train=True):$/;"	m	class:SoundDataset
+__init__	models/convbnrelu.py	/^    def __init__(self, in_channels, out_channels, ksize, stride=1, pad=0,$/;"	m	class:ConvBN
+__init__	models/convbnrelu.py	/^    def __init__(self, in_channels, out_channels, ksize, stride=1, pad=0,$/;"	m	class:ConvBNReLU
+__init__	models/convbnrelu.py	/^    def __init__(self, in_channels, out_channels, ksize, stride=1, pad=0,$/;"	m	class:ConvBNSig
+__init__	models/envnet.py	/^    def __init__(self, n_classes, **kwargs):$/;"	m	class:EnvNet
+__init__	models/envnetv2.py	/^    def __init__(self, n_classes, **kwargs):$/;"	m	class:EnvNetv2
+__init__	models/stridenet.py	/^    def __init__(self, in_channels, ksize, pad=0,$/;"	m	class:ResConvBNReLU
+__init__	models/stridenet.py	/^    def __init__(self, n_classes, **kwargs):$/;"	m	class:StrideNet
+__init__	train.py	/^    def __init__(self, model, optimizer, train_iter, val_iter, opt):$/;"	m	class:Trainer
+__len__	dataset.py	/^    def __len__(self):$/;"	m	class:SoundDataset	file:
+_max_pooling_2d	models/envnet.py	/^def _max_pooling_2d(x, ksize, _opt):$/;"	f
+_micro_section_energy_over_thr	dataset_gen/esc_gen.py	/^    def _micro_section_energy_over_thr(micro_section):$/;"	f	function:filter_silent_audio
+_opt	models/envnet.py	/^_opt = {'stride': 'same',$/;"	v
+a_weight	utils.py	/^def a_weight(fs, n_fft, min_db=-80.0):$/;"	f
+args	dataset2.py	/^args = U.fake_parse()$/;"	v
+ax	dataset_gen/viz_esc50.py	/^    ax = axs[i \/ n_items][i % n_items]$/;"	v
+bypass	models/envnetv2.py	/^    def bypass(self, conv, prev):$/;"	m	class:EnvNetv2
+cd	Session.vim	/^nnoremap <buffer> <silent> cd :call nerdtree#ui_glue#invokeKeyMap("cd")$/;"	m
+change_opt_wrt_args	test.py	/^def change_opt_wrt_args(opt, args):$/;"	f
+compute_gain	utils.py	/^def compute_gain(sound, fs, min_db=-80.0, mode='A_weighting'):$/;"	f
+convert_fs	dataset_gen/esc_gen.py	/^def convert_fs(src_path, dst_path, fs):$/;"	f
+convert_fs	dataset_gen/urbansound_gen.py	/^def convert_fs(src_path, dst_path, fs):$/;"	f
+create_dataset	dataset_gen/esc_gen.py	/^def create_dataset(src_path, esc50_dst_path, esc10_dst_path, fs, args):$/;"	f
+create_dataset	dataset_gen/noise_gen.py	/^def create_dataset(dir_path, dest_dir, fs):$/;"	f
+create_dataset	dataset_gen/urbansound_gen.py	/^def create_dataset(src_path, dst_path):$/;"	f
+dataset	dataset2.py	/^dataset = np.load(os.path.join(opt.data, opt.dataset, 'wav{}.npz'.format(opt.fs \/\/ 1000)), encoding="latin1")$/;"	v
+dataset	dataset_gen/viz_esc50.py	/^dataset = np.load(DATASET_PATH)$/;"	v
+dataset_input_fn	dataset2.py	/^def dataset_input_fn(is_train, batch_size=64, split=1):$/;"	f
+display_info	opts.py	/^def display_info(opt):$/;"	f
+e	Session.vim	/^nnoremap <buffer> <silent> e :call nerdtree#ui_glue#invokeKeyMap("e")$/;"	m
+evaluate_localisation	test.py	/^def evaluate_localisation(cams, lbls, act_thrld=30, act_window=10, min_act_per_window=3):$/;"	f
+f	Session.vim	/^nnoremap <buffer> <silent> f :call nerdtree#ui_glue#invokeKeyMap("f")$/;"	m
+f	utils.py	/^    def f(is_train, audio_len):$/;"	f	function:noiseAugment
+f	utils.py	/^    def f(sound):$/;"	f	function:multi_crop
+f	utils.py	/^    def f(sound):$/;"	f	function:normalize
+f	utils.py	/^    def f(sound):$/;"	f	function:padding
+f	utils.py	/^    def f(sound):$/;"	f	function:random_crop
+f	utils.py	/^    def f(sound):$/;"	f	function:random_gain
+f	utils.py	/^    def f(sound):$/;"	f	function:random_scale
+fake_parse	test.py	/^def fake_parse():$/;"	f
+filter_silent_audio	dataset_gen/esc_gen.py	/^def filter_silent_audio(sound,$/;"	f
+fix_opt	test.py	/^def fix_opt(opt):$/;"	f
+get_active_intervals	test.py	/^def get_active_intervals(mask):$/;"	f
+get_class_names	test.py	/^def get_class_names(opt, add_void=False):$/;"	f
+get_example	dataset.py	/^    def get_example(self, i):$/;"	m	class:SoundDataset
+get_localisation_prediction	test.py	/^def get_localisation_prediction(cam,$/;"	f
+get_split	dataset2.py	/^def get_split(opt, split):$/;"	f
+get_train_example	dataset2.py	/^def get_train_example(iterator_next):$/;"	f
+gi	Session.vim	/^nnoremap <buffer> <silent> gi :call nerdtree#ui_glue#invokeKeyMap("gi")$/;"	m
+go	Session.vim	/^nnoremap <buffer> <silent> go :call nerdtree#ui_glue#invokeKeyMap("go")$/;"	m
+gs	Session.vim	/^nnoremap <buffer> <silent> gs :call nerdtree#ui_glue#invokeKeyMap("gs")$/;"	m
+gx	Session.vim	/^nmap gx <Plug>NetrwBrowseX$/;"	m
+gx	Session.vim	/^vmap gx <Plug>NetrwBrowseXVis$/;"	m
+i	Session.vim	/^nnoremap <buffer> <silent> i :call nerdtree#ui_glue#invokeKeyMap("i")$/;"	m
+inputs	keras_training.py	/^inputs = Input(tensor=inputs)$/;"	v
+kj	Session.vim	/^inoremap kj $/;"	m
+kl_divergence	utils.py	/^def kl_divergence(y, t):$/;"	f
+lbls	dataset_gen/viz_esc50.py	/^lbls = dataset['fold1'].item()['labels']$/;"	v
+load_first_val_batch	test.py	/^def load_first_val_batch(opt, split):$/;"	f
+load_model	test.py	/^def load_model(save_path, split):$/;"	f
+loss	keras_training.py	/^              loss='categorical_crossentropy',$/;"	v
+lr_schedule	train.py	/^    def lr_schedule(self, epoch):$/;"	m	class:Trainer
+m	Session.vim	/^nnoremap <buffer> <silent> m :call nerdtree#ui_glue#invokeKeyMap("m")$/;"	m
+main	dataset2.py	/^def main():$/;"	f
+main	dataset_gen/esc_gen.py	/^def main():$/;"	f
+main	dataset_gen/noise_gen.py	/^def main():$/;"	f
+main	dataset_gen/urbansound_gen.py	/^def main():$/;"	f
+main	main.py	/^def main():$/;"	f
+main	test.py	/^def main():$/;"	f
+main2	test.py	/^def main2():$/;"	f
+metrics	keras_training.py	/^              metrics=['accuracy'],$/;"	v
+mix	dataset2.py	/^mix = opt.BC$/;"	v
+mix	utils.py	/^def mix(sound1, sound2, r, fs):$/;"	f
+model	keras_training.py	/^model = Model(inputs=inputs, outputs=y)$/;"	v
+multi_crop	utils.py	/^def multi_crop(input_length, n_crops):$/;"	f
+n_classes	keras_training.py	/^n_classes = 10$/;"	v
+n_items	dataset_gen/viz_esc50.py	/^n_items = 5$/;"	v
+noiseAugment	utils.py	/^def noiseAugment(opt):$/;"	f
+normalize	utils.py	/^def normalize(factor):$/;"	f
+null_audio_activations	test.py	/^def null_audio_activations(model):$/;"	f
+o	Session.vim	/^nnoremap <buffer> <silent> o :call nerdtree#ui_glue#invokeKeyMap("o")$/;"	m
+opt	dataset2.py	/^opt = U.load_opt(args.save, 1)$/;"	v
+p	Session.vim	/^nnoremap <buffer> <silent> p :call nerdtree#ui_glue#invokeKeyMap("p")$/;"	m
+padding	utils.py	/^def padding(pad):$/;"	f
+parse	dataset_gen/esc_gen.py	/^def parse():$/;"	f
+parse	opts.py	/^def parse():$/;"	f
+parse	test.py	/^def parse():$/;"	f
+plot_CAM_visualizations	test.py	/^def plot_CAM_visualizations(sounds, cams, lbls, split, opt, on_screen=False, zero_activations=None):$/;"	f
+plot_confusion_matrix	test.py	/^def plot_confusion_matrix(cm, classes, opt, split,$/;"	f
+plot_learning	test.py	/^def plot_learning(log_path, split, opt):$/;"	f
+plot_training_waves	test.py	/^def plot_training_waves(opt, split):$/;"	f
+preprocess	dataset.py	/^    def preprocess(self, sound):$/;"	m	class:SoundDataset
+preprocess_setup	dataset.py	/^    def preprocess_setup(self):$/;"	m	class:SoundDataset
+q	Session.vim	/^nnoremap <buffer> <silent> q :call nerdtree#ui_glue#invokeKeyMap("q")$/;"	m
+r	Session.vim	/^nnoremap <buffer> <silent> r :call nerdtree#ui_glue#invokeKeyMap("r")$/;"	m
+random_crop	utils.py	/^def random_crop(size):$/;"	f
+random_gain	utils.py	/^def random_gain(db):$/;"	f
+random_scale	utils.py	/^def random_scale(max_scale, interpolate='Linear'):$/;"	f
+s	Session.vim	/^nnoremap <buffer> <silent> s :call nerdtree#ui_glue#invokeKeyMap("s")$/;"	m
+s:cpo_save	Session.vim	/^let s:cpo_save=&cpo$/;"	v
+s:l	Session.vim	/^let s:l = 1 - ((0 * winheight(0) + 15) \/ 31)$/;"	v
+s:l	Session.vim	/^let s:l = 215 - ((21 * winheight(0) + 22) \/ 45)$/;"	v
+s:l	Session.vim	/^let s:l = 4 - ((2 * winheight(0) + 14) \/ 28)$/;"	v
+s:l	Session.vim	/^let s:l = 42 - ((0 * winheight(0) + 30) \/ 60)$/;"	v
+s:l	Session.vim	/^let s:l = 58 - ((45 * winheight(0) + 30) \/ 60)$/;"	v
+s:l	Session.vim	/^let s:l = 80 - ((0 * winheight(0) + 30) \/ 60)$/;"	v
+s:l	Session.vim	/^let s:l = 983 - ((13 * winheight(0) + 7) \/ 14)$/;"	v
+s:so_save	Session.vim	/^let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0$/;"	v
+s:sx	Session.vim	/^let s:sx = expand("<sfile>:p:r")."x.vim"$/;"	v
+s:wipebuf	Session.vim	/^  let s:wipebuf = bufnr('%')$/;"	v
+scale_pred_at_fs	test.py	/^def scale_pred_at_fs(pred, lbl_len, window_size=20570, window_step=3072):$/;"	f
+setup	dataset.py	/^def setup(opt, split):$/;"	f
+shrinked_labels_for_loc	test.py	/^def shrinked_labels_for_loc(lbls, window_size=20570, window_step=3072):$/;"	f
+sound	dataset_gen/viz_esc50.py	/^    sound = sounds[i] \/ (25000.)$/;"	v
+sounds	dataset_gen/viz_esc50.py	/^sounds = dataset['fold1'].item()['sounds']$/;"	v
+t	Session.vim	/^nnoremap <buffer> <silent> t :call nerdtree#ui_glue#invokeKeyMap("t")$/;"	m
+target_tensors	keras_training.py	/^              target_tensors=[target])$/;"	v
+to_hms	utils.py	/^def to_hms(time):$/;"	f
+train	dataset2.py	/^train = []$/;"	v
+train	main.py	/^def train(opt, split):$/;"	f
+train	train.py	/^    def train(self, epoch):$/;"	m	class:Trainer
+u	Session.vim	/^nnoremap <buffer> <silent> u :call nerdtree#ui_glue#invokeKeyMap("u")$/;"	m
+val	dataset2.py	/^val = []$/;"	v
+val	train.py	/^    def val(self):$/;"	m	class:Trainer
+val_batch_gen	test.py	/^def val_batch_gen(opt, split, remove_padding=False):$/;"	f
+x	Session.vim	/^nnoremap <buffer> <silent> x :call nerdtree#ui_glue#invokeKeyMap("x")$/;"	m
+x	keras_training.py	/^    x = BatchNormalization()(x)$/;"	v
+x	keras_training.py	/^    x = Conv1D(64, 3, strides=2, padding='valid', activation='relu')(x)$/;"	v
+x	keras_training.py	/^x = Conv1D(n_classes, 3, strides=2)(x)$/;"	v
+x	keras_training.py	/^x = GlobalMaxPooling1D()(x)$/;"	v
+x	keras_training.py	/^x = inputs$/;"	v
+y	keras_training.py	/^y = Activation('softmax')(x)$/;"	v
+zt	Session.vim	/^normal! zt$/;"	m
