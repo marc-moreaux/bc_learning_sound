@@ -6,7 +6,12 @@ def parse():
     parser = argparse.ArgumentParser(description='BC learning for sounds')
 
     # General settings
-    parser.add_argument('--dataset', required=True, choices=['esc10', 'esc50', 'urbansound8k', 'epicKitchen'])
+    parser.add_argument('--dataset', required=True, choices=['esc10',
+                                                             'esc50',
+                                                             'esc70',
+                                                             'urbansound8k',
+                                                             'epicKitchen',
+                                                             'kitchen20'])
     parser.add_argument('--netType', required=True, choices=['envnet', 'envnetv2', 'stridenet'])
     parser.add_argument('--data', required=True, help='Path to dataset')
     parser.add_argument('--split', type=int, default=-1, help='esc: 1-5, urbansound: 1-10 (-1: run on all splits)')
@@ -43,6 +48,12 @@ def parse():
     elif opt.dataset == 'esc10':
         opt.nClasses = 10
         opt.nFolds = 5
+    elif opt.dataset == 'esc70':
+        opt.nClasses = 70
+        opt.nFolds = 5
+    elif opt.dataset == 'kitchen20':
+        opt.nClasses = 20
+        opt.nFolds = 5
     elif opt.dataset == 'urbansound8k':
         opt.nClasses = 10
         opt.nFolds = 10
@@ -51,7 +62,7 @@ def parse():
         opt.nFolds = 5
 
     if opt.split == -1:
-        opt.splits = range(1, opt.nFolds + 1)
+        opt.splits = list(range(1, opt.nFolds + 1))
     else:
         opt.splits = [opt.split]
 
@@ -91,6 +102,16 @@ def parse():
         'envnetv2': {'nEpochs': 1000, 'LR': 0.1, 'schedule': [0.3, 0.6, 0.9], 'warmup': 10},
         'stridenet': {'nEpochs': 1000, 'LR': 0.1, 'schedule': [0.3, 0.6, 0.9], 'warmup': 10},
     }
+    default_settings['kitchen20'] = {
+        'envnet': {'nEpochs': 600, 'LR': 0.01, 'schedule': [0.5, 0.7, 0.9], 'warmup': 0},
+        'envnetv2': {'nEpochs': 1000, 'LR': 0.01, 'schedule': [0.3, 0.6, 0.9], 'warmup': 0},
+        'stridenet': {'nEpochs': 600, 'LR': 0.01, 'schedule': [0.5, 0.75], 'warmup': 0},
+    }
+    default_settings['esc70'] = {
+        'envnet': {'nEpochs': 600, 'LR': 0.01, 'schedule': [0.5, 0.7, 0.9], 'warmup': 0},
+        'envnetv2': {'nEpochs': 1000, 'LR': 0.1, 'schedule': [0.3, 0.6, 0.9], 'warmup': 10},
+        'stridenet': {'nEpochs': 600, 'LR': 0.01, 'schedule': [0.5, 0.75], 'warmup': 0},
+    }
     for key in ['nEpochs', 'LR', 'schedule', 'warmup']:
         if eval('opt.{}'.format(key)) == -1:
             setattr(opt, key, default_settings[opt.dataset][opt.netType][key])
@@ -114,15 +135,15 @@ def display_info(opt):
     print('+------------------------------+')
     print('| Sound classification')
     print('+------------------------------+')
-    print('| dataset  : {}'.format(opt.dataset))
-    print('| netType  : {}'.format(opt.netType))
-    print('| GAP      : {} {}'.format(opt.GAP, opt.l1reg))
-    print('| bypass   : {}'.format(opt.bypass))
-    print('| learning : {}'.format(learning))
-    print('| augment  : {}'.format(opt.strongAugment))
-    print('| nEpochs  : {}'.format(opt.nEpochs))
-    print('| LRInit   : {}'.format(opt.LR))
-    print('| schedule : {}'.format(opt.schedule))
-    print('| warmup   : {}'.format(opt.warmup))
-    print('| batchSize: {}'.format(opt.batchSize))
+    print(('| dataset  : {}'.format(opt.dataset)))
+    print(('| netType  : {}'.format(opt.netType)))
+    print(('| GAP      : {} {}'.format(opt.GAP, opt.l1reg)))
+    print(('| bypass   : {}'.format(opt.bypass)))
+    print(('| learning : {}'.format(learning)))
+    print(('| augment  : {}'.format(opt.strongAugment)))
+    print(('| nEpochs  : {}'.format(opt.nEpochs)))
+    print(('| LRInit   : {}'.format(opt.LR)))
+    print(('| schedule : {}'.format(opt.schedule)))
+    print(('| warmup   : {}'.format(opt.warmup)))
+    print(('| batchSize: {}'.format(opt.batchSize)))
     print('+------------------------------+')

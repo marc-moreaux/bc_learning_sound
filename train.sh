@@ -1,3 +1,11 @@
 #!/bin/bash
-python main.py --dataset esc10 --netType envnet --BC --strongAugment --data /media/moreaux/Data/Dataset/ENVNET_DB/ --inputTime 2.5 --save ./results/esc10_att
-python main.py --dataset esc10 --netType envnet --BC --strongAugment --data /media/moreaux/Data/Dataset/ENVNET_DB/ --GAP --l1reg 1e-6 --inputTime 2.5 --save ./results/esc10_att_6
+for ITER in 1 2 3 
+do
+
+python3 main.py --dataset kitchen20 --netType envnetv2 --data /media/moreaux-gpu/Data/Dataset/ESC/ --save /media/moreaux-gpu/Data/envnet_results/kitchen20_ev2/$ITER
+python3 main.py --dataset kitchen20 --netType envnetv2 --BC --strongAugment --data /media/moreaux-gpu/Data/Dataset/ESC/ --save /media/moreaux-gpu/Data/envnet_results/kitchen20_ev2_strong_BC/$ITER
+python3 main.py --dataset kitchen20 --netType envnet --data /media/moreaux-gpu/Data/Dataset/ESC/ --save /media/moreaux-gpu/Data/envnet_results/kitchen20_ev/$ITER
+python3 main.py --dataset kitchen20 --netType envnet --BC --strongAugment --data /media/moreaux-gpu/Data/Dataset/ESC/ --save /media/moreaux-gpu/Data/envnet_results/kitchen20_ev_strong_BC/$ITER
+
+done
+

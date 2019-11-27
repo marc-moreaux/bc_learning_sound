@@ -69,7 +69,7 @@ def main():
 
 
 def convert_fs(src_path, dst_path, fs):
-    print('* {} -> {}'.format(src_path, dst_path))
+    print(('* {} -> {}'.format(src_path, dst_path)))
     if not os.path.isdir(dst_path):
         os.mkdir(dst_path)
     for src_file in sorted(glob.glob(os.path.join(src_path, '*.wav'))):
@@ -158,8 +158,8 @@ def filter_silent_audio(sound,
 
 
 def create_dataset(src_path, esc50_dst_path, esc10_dst_path, fs, args):
-    print('* {} -> {}'.format(src_path, esc50_dst_path))
-    print('* {} -> {}'.format(src_path, esc10_dst_path))
+    print(('* {} -> {}'.format(src_path, esc50_dst_path)))
+    print(('* {} -> {}'.format(src_path, esc10_dst_path)))
     esc10_classes = [0, 10, 11, 20, 38, 21, 40, 41, 1, 12]  # ESC-10 is a subset of ESC-50
     esc50_dataset = {}
     esc10_dataset = {}

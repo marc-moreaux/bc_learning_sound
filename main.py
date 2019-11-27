@@ -13,14 +13,14 @@ import opts
 import models
 import dataset
 from train import Trainer
-import cPickle as pickle
+import pickle as pickle
 
 
 def main():
     opt = opts.parse()
     chainer.cuda.get_device_from_id(opt.gpu).use()
     for split in opt.splits:
-        print('+-- Split {} --+'.format(split))
+        print(('+-- Split {} --+'.format(split)))
         train(opt, split)
 
 
@@ -41,7 +41,7 @@ def train(opt, split):
                                           'model_split{}.npz'.format(split)),
                                      trainer.model)
         val_top1 = trainer.val()
-        print('| Val: top1 {:.2f}'.format(val_top1))
+        print(('| Val: top1 {:.2f}'.format(val_top1)))
         return
 
     for epoch in range(1, opt.nEpochs + 1):
@@ -66,7 +66,7 @@ def train(opt, split):
             join(opt.save, 'model_split{}.npz'.format(split)), model)
         # Save logs
         with open(join(opt.save, 'logger{}.txt'.format(split)), "w") as f:
-            for k, v in log.items():
+            for k, v in list(log.items()):
                 f.write(str(k) + ': ' + str(v) + '\n')
         # Save parameters
         with open(join(opt.save, 'opt{}.pkl'.format(split)), "wb") as f:

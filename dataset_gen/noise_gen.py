@@ -14,7 +14,7 @@ import wavio
 
 
 def create_dataset(dir_path, dest_dir, fs):
-    print('* Creating the .npz in {}'.format(dir_path))
+    print(('* Creating the .npz in {}'.format(dir_path)))
     wav_dataset = {'train': [], 'valid': []}
  
     for wav_file in sorted(os.listdir(dir_path)):

@@ -8,7 +8,7 @@
 import chainer
 import chainer.functions as F
 import chainer.links as L
-from convbnrelu import ConvBNReLU
+from .convbnrelu import ConvBNReLU
 
 
 class EnvNetv2(chainer.Chain):
@@ -33,9 +33,9 @@ class EnvNetv2(chainer.Chain):
         self.use_GAP = False
         self.use_bypass = False 
         self.maps = []
-        if 'GAP' in kwargs.keys():
+        if 'GAP' in list(kwargs.keys()):
             self.use_GAP = kwargs['GAP']
-        if 'bypass' in kwargs.keys():
+        if 'bypass' in list(kwargs.keys()):
             self.use_bypass = kwargs['bypass']
             self.BPlayers = []
 
@@ -95,7 +95,7 @@ class EnvNetv2(chainer.Chain):
             return h
 
         h = F.max_pooling_2d(h, (1, 2))
-        h = F.dropout(F.relu(self.fc11(h)), train=self.train)
-        h = F.dropout(F.relu(self.fc12(h)), train=self.train)
+        h = F.dropout(F.relu(self.fc11(h)))
+        h = F.dropout(F.relu(self.fc12(h)))
 
         return self.fc13(h)

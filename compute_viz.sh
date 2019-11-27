@@ -1,5 +1,5 @@
 #!/bin/bash
-for r_dir in results/*
+for r_dir in /media/moreaux-gpu/Data/envnet_results/*/1
 do
-python ./test.py --save $r_dir
+python3 ./test.py --save $r_dir
 done

@@ -73,7 +73,11 @@ def main():
 
 def convert_fs(src_path, dst_path, fs, args):
     # Print info
+<<<<<<< HEAD
+    print(('\nConvert fs: \n {} -> {}'.format(src_path, dst_path)))
+=======
     print('\nConvert fs: \n {} -> {}'.format(src_path, dst_path))
+>>>>>>> c1c7a4f1fa292afa2b74042f2c15f8a3f0c94143
 
     # Init some var
     df = pd.read_csv(args.csv_path)
@@ -125,7 +129,11 @@ def str_to_timedelta(mStr):
     '''
     from datetime import time, timedelta
     mStr = mStr.replace('.', ':').split(':')
+<<<<<<< HEAD
+    mTime = time(*list(map(int, mStr)))
+=======
     mTime = time(*map(int, mStr))
+>>>>>>> c1c7a4f1fa292afa2b74042f2c15f8a3f0c94143
     mTime = timedelta(hours=mTime.hour,
                       minutes=mTime.minute,
                       seconds=mTime.second,
@@ -212,8 +220,13 @@ def filter_silent_audio(sound,
 
 
 def create_dataset(src_path, epicKitchen_dst_path, fs, args):
+<<<<<<< HEAD
+    print(('\nCreate dataset : \n* {} -> {}'.format(
+        src_path, epicKitchen_dst_path)))
+=======
     print('\nCreate dataset : \n* {} -> {}'.format(
         src_path, epicKitchen_dst_path))
+>>>>>>> c1c7a4f1fa292afa2b74042f2c15f8a3f0c94143
 
     # Initialize some variables
     epicKitchen_dataset = {}
@@ -221,7 +234,11 @@ def create_dataset(src_path, epicKitchen_dst_path, fs, args):
     df = df[df.classId >= 0]
 
     for fold in range(1, 6):
+<<<<<<< HEAD
+        print(('fold {}'.format(fold)))
+=======
         print('fold {}'.format(fold))
+>>>>>>> c1c7a4f1fa292afa2b74042f2c15f8a3f0c94143
         epicKitchen_dataset['fold{}'.format(fold)] = {}
         epicKitchen_sounds = []
         epicKitchen_labels = []

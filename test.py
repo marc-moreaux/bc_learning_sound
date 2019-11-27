@@ -17,7 +17,7 @@ import numpy as np
 import os
 import argparse
 import itertools
-import cPickle as pickle
+import pickle as pickle
 import ast
 import sys
 from sklearn.metrics import confusion_matrix
@@ -30,7 +30,7 @@ def fake_parse():
         save='./results/esc50_gap_7',
         split=[1, 2, 3, 4, 5],
         noiseAugment=False,
-        inputLength=0,
+        inputLength=2.5,
         act_thrld=4,
         act_window=7,
         min_act_per_window=3,
@@ -142,9 +142,9 @@ def load_model(save_path, split):
     # Load model
     model = getattr(models, opt.netType)(opt.nClasses, GAP=opt.GAP)
     chainer.serializers.load_npz(
-        os.path.join(opt.save, 'model_split{}.npz'.format(split)), model)
+        os.path.join(save_path, 'model_split{}.npz'.format(split)), model)
     model.to_gpu()
-  
+
     return model, opt
 
 
@@ -152,7 +152,7 @@ def load_first_val_batch(opt, split):
     '''Loads the 1st batch of the validation dataset
     '''
     train_iter, val_iter = dataset.setup(opt, split)
-    batch = val_iter.next()
+    batch = next(val_iter)
     x_array, lbls = chainer.dataset.concat_examples(batch)
     if opt.nCrops > 1:
         x_array = x_array.reshape((x_array.shape[0] * opt.nCrops, x_array.shape[2]))
@@ -181,7 +181,7 @@ def val_batch_gen(opt, split, remove_padding=False, to_gpu=True):
 
 
 def val_batch_dataset(opt, split, remove_padding=False, n_samples=100):
-    import cPickle as pkl
+    import pickle as pkl
     import os
     data_path = os.path.join(opt.data, 
                              opt.dataset, 
@@ -222,7 +222,7 @@ def get_active_intervals(mask):
     if tmp1[-1] == 1:
         end_idx = np.concatenate([end_idx, [len(tmp1),]])
 
-    return zip(start_idx, end_idx)
+    return list(zip(start_idx, end_idx))
 
 
 def shrinked_labels_for_loc(lbls, window_size=20570, window_step=3072):
@@ -235,7 +235,7 @@ def shrinked_labels_for_loc(lbls, window_size=20570, window_step=3072):
         Envnet50: wsi=20570, wst=3072
     '''
     window_size = window_size - window_step + 1
-    print(lbls.shape, window_size/2)
+    print((lbls.shape, window_size/2))
     gts = lbls[:, window_size/2 : -window_size/2 : window_step]
     return np.array(gts)
 
@@ -320,7 +320,7 @@ def evaluate_localisation(cams, lbls,
         accuracy = accuracy.mean() if len(accuracy) > 0 else 0
         conf_matrix = None
         if use_cm:
-            conf_matrix = confusion_matrix(gt, pred, range(-1,50))
+            conf_matrix = confusion_matrix(gt, pred, list(range(-1,50)))
             conf_matrix = conf_matrix.astype(np.float32)
         
         cam = cam.astype(np.float32)
@@ -419,7 +419,7 @@ def plot_learning(log_path, split, opt):
 
 def plot_training_waves(opt, split):
     train_iter, val_iter = dataset.setup(opt, split)
-    batch = train_iter.next()
+    batch = next(train_iter)
     class_names = get_class_names(opt)
 
     fig, axs = plt.subplots(8, 8, figsize=(15, 12))
@@ -461,7 +461,7 @@ def plot_confusion_matrix(cm, classes, opt, split,
 
         fmt = '1.1f' if normalize else 'd'
         thresh = cm.max() / 2.
-        for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        for i, j in itertools.product(list(range(cm.shape[0])), list(range(cm.shape[1]))):
             ax.text(j, i, format(cm[i, j], fmt),
                      horizontalalignment="center",
                      color="white" if cm[i, j] > thresh else "black")
@@ -513,7 +513,7 @@ def main():
                     sounds = chainer.cuda.to_cpu(x.data)
                     plot_CAM_visualizations(sounds, cams, lbls, split, opt, False)
                 except:
-                    print('CAMS part failed for {}'.format(args.save))
+                    print(('CAMS part failed for {}'.format(args.save)))
 
         # Visualize learning
         log_path = os.path.join(opt.save, 'logger{}.txt'.format(split))
@@ -557,7 +557,7 @@ def get_cams(args):
         opt.noiseAugment = False
         val_batch = val_batch_dataset(opt, split)
         for _ in range(args.n_batch_eval):
-            x, lbls = val_batch.next()
+            x, lbls = next(val_batch)
             y = model(x)
             cams = chainer.cuda.to_cpu(model.maps.data)
             cams = cams.mean(axis=2)
@@ -575,7 +575,7 @@ def get_cams(args):
         opt.noiseAugment = True
         val_batch = val_batch_dataset(opt, split)
         for _ in range(args.n_batch_eval):
-            x, lbls = val_batch.next()
+            x, lbls = next(val_batch)
             y = model(x)
             cams = chainer.cuda.to_cpu(model.maps.data)
             cams = cams.mean(axis=2).astype(np.float32)
@@ -587,7 +587,7 @@ def get_cams(args):
             xy_dict[str(split) + '-cams-n'].append(cams)
 
     # Make np.arrays
-    for k, v in xy_dict.items():
+    for k, v in list(xy_dict.items()):
         if 'xs' in k or 'lbls' in k or 'cams' in k:
             xy_dict[k] = np.concatenate(xy_dict[k])
         else:
@@ -668,8 +668,6 @@ def roc_curve_from_cam(xy_dict):
 def main2(args):
     '''Evaluate localization
     '''
-    import utils; reload(utils)
-    import dataset; reload(dataset)
     
     xy_dict = get_cams(args)
     

@@ -59,7 +59,7 @@ def random_gain(db):
 def noiseAugment(opt):
     data_path = opt.data
     npz_path = join(data_path, 'noise', 'wav{}.npz'.format(opt.fs // 1000))
-    dataset = dict(np.load(npz_path).items())
+    dataset = dict(list(np.load(npz_path).items()))
     train, valid = dataset['train'][0], dataset['valid'][0]
     valid = (valid / np.percentile(train, 95)).clip(-1, 1)
     train = (train / np.percentile(train, 95)).clip(-1, 1)
@@ -108,7 +108,7 @@ def compute_gain(sound, fs, min_db=-80.0, mode='A_weighting'):
     stride = n_fft // 2
 
     gain = []
-    for i in xrange(0, len(sound) - n_fft + 1, stride):
+    for i in range(0, len(sound) - n_fft + 1, stride):
         if mode == 'RMSE':
             g = np.mean(sound[i: i + n_fft] ** 2)
         elif mode == 'A_weighting':

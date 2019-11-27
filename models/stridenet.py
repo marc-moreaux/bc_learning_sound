@@ -8,7 +8,7 @@
 import chainer
 import chainer.functions as F
 import chainer.links as L
-from convbnrelu import ConvBNReLU
+from .convbnrelu import ConvBNReLU
 
 
 class ResConvBNReLU(chainer.Chain):
@@ -57,7 +57,7 @@ class StrideNet(chainer.Chain):
             fc13=L.Linear(4096, n_classes)
         )
         self.train = True
-        if 'GAP' in kwargs.keys():
+        if 'GAP' in list(kwargs.keys()):
             self.use_GAP = kwargs['GAP']
 
     def __call__(self, x):

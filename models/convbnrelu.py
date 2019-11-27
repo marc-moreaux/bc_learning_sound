@@ -17,7 +17,7 @@ class ConvBNReLU(chainer.Chain):
         h = self.conv(x)
 
         if self.use_bn:
-            h = self.bn(h, test=not train)
+            h = self.bn(h)
 
         return F.relu(h)
 
@@ -35,7 +35,7 @@ class ConvBNSig(chainer.Chain):
     def __call__(self, x, train):
         h = self.conv(x)
         if self.use_bn:
-            h = self.bn(h, test=not train)
+            h = self.bn(h)
 
         return F.sigmoid(h)
 
@@ -53,6 +53,6 @@ class ConvBN(chainer.Chain):
     def __call__(self, x, train):
         h = self.conv(x)
         if self.use_bn:
-            h = self.bn(h, test=not train)
+            h = self.bn(h)
 
         return h

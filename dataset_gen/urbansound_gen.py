@@ -32,7 +32,7 @@ def main():
 
 
 def convert_fs(src_path, dst_path, fs):
-    print('* {} -> {}'.format(src_path, dst_path))
+    print(('* {} -> {}'.format(src_path, dst_path)))
     os.mkdir(dst_path)
     for fold in sorted(os.listdir(src_path)):
         if os.path.isdir(os.path.join(src_path, fold)):
@@ -44,7 +44,7 @@ def convert_fs(src_path, dst_path, fs):
 
 
 def create_dataset(src_path, dst_path):
-    print('* {} -> {}'.format(src_path, dst_path))
+    print(('* {} -> {}'.format(src_path, dst_path)))
     dataset = {}
     for fold in range(1, 11):
         dataset['fold{}'.format(fold)] = {}

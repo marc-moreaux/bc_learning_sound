@@ -57,7 +57,11 @@ def dataset_input_fn(is_train, batch_size=64, split=1):
     sounds, labels = train[split-1] if is_train is True else val[split-1]
     labels = np.array(labels).reshape((-1, 1))
     dataset = tf.data.Dataset.from_generator(
+<<<<<<< HEAD
+        lambda: list(zip(sounds, labels)),
+=======
         lambda: zip(sounds, labels),
+>>>>>>> c1c7a4f1fa292afa2b74042f2c15f8a3f0c94143
         output_types=(tf.float32, tf.int32),
         output_shapes=(tf.TensorShape([None]),
                        tf.TensorShape(1)))
@@ -128,7 +132,11 @@ def main():
             results, = sess.run([train_iterator])
             a, lbl = results
             a = a[0,:,0]
+<<<<<<< HEAD
+            print((lbl[0]))
+=======
             print(lbl[0])
+>>>>>>> c1c7a4f1fa292afa2b74042f2c15f8a3f0c94143
             plt.plot(a)
             plt.show()
 
